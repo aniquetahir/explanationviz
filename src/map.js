@@ -1,7 +1,6 @@
 import React, {Component} from 'react';
 import MapGL from 'react-map-gl';
 
-const MAPBOX_TOKEN = 'pk.eyJ1IjoiYW5pcXVlIiwiYSI6ImNpbGplM2lvaTRqa3l1aGtwczh1NTl2dmUifQ.D8r0wSvsF5cjJ3HYKiuMJQ';
 
 class Map extends Component {
     static get defaultViewport() {
@@ -18,6 +17,8 @@ class Map extends Component {
 
     constructor(props){
         super(props);
+
+        this.MAPBOX_TOKEN = 'pk.eyJ1IjoiYW5pcXVlIiwiYSI6ImNpbGplM2lvaTRqa3l1aGtwczh1NTl2dmUifQ.D8r0wSvsF5cjJ3HYKiuMJQ';
 
         this.state = {
             viewport: {
@@ -55,7 +56,7 @@ class Map extends Component {
                 mapStyle="mapbox://styles/anique/ciljdxi3k001daqlu1kdc45l2"
                 perspectiveEnabled={true}
                 onChangeViewport={this._onChangeViewport.bind(this)}
-                mapboxApiAccessToken={MAPBOX_TOKEN}
+                mapboxApiAccessToken={this.MAPBOX_TOKEN}
             />
         );
     }

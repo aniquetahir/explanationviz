@@ -5,3 +5,7 @@ html, body{
     width: 100%;
 }
 
+.mapboxgl-canvas-container > canvas {
+    left: 0;
+}
+
