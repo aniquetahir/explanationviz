@@ -1,0 +1,3 @@
+[submodule "datapolygamyutils"]
+	path = datapolygamyutils
+	url = https://github.com/aniquetahir/datapolygamyutils.git
