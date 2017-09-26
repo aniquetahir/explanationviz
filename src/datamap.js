@@ -1,6 +1,9 @@
 import MapGL from 'react-map-gl';
 import Map from './map.js';
 import React, {Component} from 'react';
+import Loading from './loading.js';
+import {json as requestJson} from 'd3-request';
+import _ from 'lodash';
 
 class DataSelector extends Component{
     render(){
@@ -22,9 +25,9 @@ class DataSelector extends Component{
                     {/* Iteratively list all the datasets */}
                     {datasets.map((d)=>{
                         return (
-                            <tr key={d.key}>
+                            <tr key={d.id}>
                                 <td className="mdl-data-table__cell--non-numeric"
-                                    onClick={()=>{this.props.onDataSelect(d.key);}}>{d.name}</td>
+                                    onClick={()=>{this.props.onDataSelect(d.id);}}>{d.name}</td>
                             </tr>
                         );
                     })}
@@ -79,12 +82,12 @@ class AttributeSelector extends Component{
                                         {/* Iteratively list all the attributes */}
                                         {nonspatialattributes.map((d)=>{
                                             return (
-                                                <tr key={d.key} style={
+                                                <tr key={d.id} style={
                                                     (()=>{
-                                                        if(d.key===this.state.nonspatial){return selectedStyle;}
+                                                        if(d.id===this.state.nonspatial){return selectedStyle;}
                                                     })()
                                                 }
-                                                    onClick={()=>this.setState({nonspatial: d.key})}>
+                                                    onClick={()=>this.setState({nonspatial: d.id})}>
                                                     <td className="mdl-data-table__cell--non-numeric">{d.name}</td>
                                                 </tr>
                                             );
@@ -103,12 +106,12 @@ class AttributeSelector extends Component{
                                         {/* Iteratively list all the attributes */}
                                         {spatialattributes.map((d)=>{
                                             return (
-                                                <tr key={d.key} style={
+                                                <tr key={d.id} style={
                                                     (()=>{
-                                                        if(d.key===this.state.spatial){return selectedStyle;}
+                                                        if(d.id===this.state.spatial){return selectedStyle;}
                                                     })()
                                                 }
-                                                    onClick={()=>this.setState({spatial: d.key})}>
+                                                    onClick={()=>this.setState({spatial: d.id})}>
                                                     <td className="mdl-data-table__cell--non-numeric">{d.name}</td>
                                                 </tr>
                                             );
@@ -147,57 +150,98 @@ class DataMap extends Map {
         this.MODE_HISTOGRAM_VIEW = 3;
         this.MODE_HEATMAP_VIEW = 4;
         this.state.mode = this.MODE_DATASET_SELECT;
+        this.state.loading = false;
+        this.state.datasets = [];
 
     }
 
+    componentDidMount(){
+        this.getDataSets();
+    }
+
     getDataSets(){
-        // TODO Get names from Hadoop
-        let names = [{key:1, name:"Weather"}, {key:2, name:"YellowCab"}];
-        return names;
+        // Show Loading
+        this.setState({
+            loading: true
+        });
+
+        requestJson('http://localhost:8080/datasets.json', (err, resp)=>{
+            if(err){
+                console.log(err);
+            }else{
+                this.setState({
+                    datasets: resp
+                });
+            }
+            this.setState({
+                loading: false
+            });
+        });
     }
 
     loadDataSet(datasetid){
         console.log("Loading dataset "+datasetid);
-        // TODO Show Loading
-        // TODO Get Data
-        // TODO Process Data
-        let nonspatialattributes = [{key:1, name:"Tip Percentage"}, {key:2, name:"Total Amount"}];
-        let spatialattributes =[{key:1, name:"Pickup"}, {key:2, name:"Dropoff"}];
-        nonspatialattributes.push({key:0, name:"None"});
-        spatialattributes.push({key:0, name:"None"});
+
+        // Show Loading
+        this.setState({
+            loading: true
+        });
+
+        let nonspatialattributes = [];
+        let spatialattributes =[];
+
+        let result = _.find(this.state.datasets, (dataset)=>{return dataset.id===datasetid;});
+        if(result){
+            nonspatialattributes = result.nonspatial;
+            spatialattributes = result.spatial;
+        }else{
+            console.log('No matching dataset found');
+        }
+
         // Change Mode
         this.setState({
             mode: this.MODE_ATTRIBUTE_SELECT,
             nonSpatialAttrs: nonspatialattributes,
             spatialAttrs: spatialattributes
-        })
-        // TODO Remove loading
+        });
+
+
+        this.setState({
+            loading: false
+        });
     }
 
     loadHeatmap(nonspatialatt, spatialatt){
         console.log("Loading Heatmap for "+nonspatialatt+"/"+spatialatt);
-        // TODO Show Loading
+        //Show Loading
+        this.setState({
+            loading: true
+        });
 
         // TODO Load Heatmap data
 
-        // Process Heatmap data
+
+        // TODO Process Heatmap data
 
         // Set Mode to Heatmap
         this.setState({
             mode: this.MODE_HEATMAP_VIEW
         });
-        // TODO Remove Loading
+        // Remove Loading
+        this.setState({
+            loading: false
+        });
     }
 
     render(){
-        const {viewport, mode} = this.state;
+        const {viewport, mode, loading, datasets} = this.state;
 
         let additionalViews = [];
         let additionalViewKey = 0;
         if(mode===this.MODE_DATASET_SELECT){
             additionalViews.push(
                 <DataSelector key={++additionalViewKey}
-                              datasets={this.getDataSets()}
+                              datasets={datasets}
                               onDataSelect={this.loadDataSet.bind(this)}
 
                 />
@@ -213,13 +257,18 @@ class DataMap extends Map {
             )
         }
 
+        if(loading){
+            additionalViews.push(<Loading key={++additionalViewKey} />);
+        }
+
+
         return (
             <div>
                 <MapGL
                     {...viewport}
                     mapStyle="mapbox://styles/anique/ciljdxi3k001daqlu1kdc45l2"
-                    perspectiveEnabled={true}
-                    onChangeViewport={this._onChangeViewport.bind(this)}
+                    dragrotate={true}
+                    onViewportChange={this._onChangeViewport.bind(this)}
                     mapboxApiAccessToken={this.MAPBOX_TOKEN} >
                     {/* Overlays */}
                 </MapGL>
