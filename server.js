@@ -1,6 +1,7 @@
 const express = require('express');
 var cors = require('cors');
 const app = express();
+const {spawn} = require('child_process');
 
 app.use(cors());
 
@@ -28,6 +29,73 @@ app.get('/datasets.json', function (req, res) {
         }
     ];
     res.send(JSON.stringify(datasets));
+});
+
+app.get('/histogram.svg', function(req, res){
+    let datasetid = req.query.datasetid;
+
+    // TODO get datasetname from datasetid
+    let datasetname='yellowdata';
+    // EXEC Python and get svg response
+    let data = '';
+    const histogram_process = spawn('python3',
+        ['./datapolygamyutils/datapoly1d.py',
+         './datapolygamyutils/aggregates/data',
+         `./datapolygamyutils/${datasetname}.header`,
+         '1'
+        ]);
+
+    res.setHeader('Content-Type','image/svg+xml');
+
+    histogram_process.stdout.on('data', (d)=>{
+       data+=d;
+    });
+
+    histogram_process.stderr.on('data',(d)=>{console.log(`${d}`);});
+
+    histogram_process.on('close', (code)=>{
+        res.send(data);
+        console.log(`Child process ended with code ${code}`);
+    });
+
+
+});
+
+app.get('./cartogram.json', function(req, res){
+    let datasetid=req.query.datasetid;
+    let attributeid=req.query.attributeid;
+
+    // TODO Get files relevant to dataset
+    const aggregates_file = './datapolygamyutils/aggregates/data';
+    const index_file = './datapolygamyutils/index/data';
+    const temporal_resolution = '4';
+    const attribute_index = attributeid;
+    const neighbourhood_file = './datapolygamyutils/neighbourhood.txt';
+
+    // EXEC Python and get svg response
+    let data = '';
+    res.setHeader('Content-Type', 'application/json');
+
+    const cartogram_process = spawn('python3',
+        ['./datapolygamyutils/view_map_json.py',
+            aggregates_file,
+            index_file,
+            temporal_resolution,
+            attribute_index
+        ]);
+
+    histogram_process.stdout.on('data', (d)=>{
+        data+=d;
+    });
+
+    histogram_process.stderr.on('data',(d)=>{console.log(`${d}`);});
+
+    histogram_process.on('close', (code)=>{
+        res.send(data);
+        console.log(`Child process ended with code ${code}`);
+    });
+
+
 });
 
 app.listen(8080, function () {
