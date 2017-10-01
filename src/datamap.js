@@ -1,11 +1,12 @@
 import MapGL from 'react-map-gl';
 import Map from './map.js';
-import React, {Component} from 'react';
+import React from 'react';
 import HistogramView from './histogramview.js';
 import {DataSelector, AttributeSelector} from './dataselector.js'
 import Loading from './loading.js';
 import {json as requestJson} from 'd3-request';
 import _ from 'lodash';
+import DeckGLOverlay from './deckgloverlay.js';
 
 class DataMap extends Map {
     constructor(props){
@@ -15,15 +16,19 @@ class DataMap extends Map {
         this.MODE_HISTOGRAM_VIEW = 3;
         this.MODE_HEATMAP_VIEW = 4;
         this.state.mode = this.MODE_DATASET_SELECT;
-        this.state.loading = false;
+        this.state.loading = true;
         this.state.datasets = [];
         this.state.datasetid=null;
+        this.state.data=null;
 
     }
 
     componentDidMount(){
         super.componentDidMount();
         this.getDataSets();
+        this.setState({
+            loading: false
+        });
     }
 
     getDataSets(){
@@ -72,7 +77,6 @@ class DataMap extends Map {
             nonSpatialAttrs: nonspatialattributes,
             spatialAttrs: spatialattributes,
             datasetid: datasetid
-
         });
 
 
@@ -81,39 +85,45 @@ class DataMap extends Map {
         });
     }
 
-    showHistogram(){
-        this.setState({
-            mode: this.MODE_HISTOGRAM_VIEW
-        })
-    }
 
     loadHeatmap(nonspatialatt, spatialatt){
         console.log("Loading Heatmap for "+nonspatialatt+"/"+spatialatt);
         //Show Loading
         this.setState({
-            loading: true
-        });
-
-        // TODO Load Heatmap data
-
-
-        // TODO Process Heatmap data
-
-        // Set Mode to Heatmap
-        this.setState({
+            loading: true,
             mode: this.MODE_HEATMAP_VIEW
         });
-        // Remove Loading
-        this.setState({
-            loading: false
-        });
+
+
+        // TODO Load Heatmap data
+        requestJson(`http://localhost:8080/cartogram.json?attributeid=${nonspatialatt}`,
+            (err, resp)=>{
+                if(err){
+                    console.log(err);
+                }else{
+                    this.setState({
+                        data: resp
+                    });
+                }
+                this.setState({
+                    loading: false
+                });
+
+            }
+
+        );
+
     }
 
     render(){
-        const {viewport, mode, loading, datasets, datasetid} = this.state;
+        const {viewport, mode, loading, datasets, datasetid, data} = this.state;
 
         let additionalViews = [];
+        let outerViews = [];
         let additionalViewKey = 0;
+        let outerViewKey=0;
+
+
         if(mode===this.MODE_DATASET_SELECT){
             additionalViews.push(
                 <DataSelector key={++additionalViewKey}
@@ -129,34 +139,48 @@ class DataMap extends Map {
                 <AttributeSelector key={++additionalViewKey}
                                    nonspatialattributes={this.state.nonSpatialAttrs}
                                    spatialattributes={this.state.spatialAttrs}
-                                   onViewHistogram={this.showHistogram.bind(this)}
+                                   onAttributeSet={this.loadHeatmap.bind(this)}
                 />
             );
-        }else if(mode===this.MODE_HISTOGRAM_VIEW){
-            additionalViews.push(
-              <HistogramView key={++additionalViewKey}
-                    datasetid={datasetid}
-              />
+            outerViews.push(
+                <HistogramView key={++outerViewKey}
+                               datasetid={datasetid}
+                />
             );
         }
 
 
         if(loading){
-            additionalViews.push(<Loading key={++additionalViewKey} />);
+            outerViews.push(<Loading key={++outerViewKey} />);
         }
 
 
         return (
-            <div>
-                <MapGL
-                    {...viewport}
-                    mapStyle="mapbox://styles/anique/ciljdxi3k001daqlu1kdc45l2"
-                    dragrotate={true}
-                    onViewportChange={this._onChangeViewport.bind(this)}
-                    mapboxApiAccessToken={this.MAPBOX_TOKEN} >
-                    {/* Overlays */}
-                </MapGL>
-                {additionalViews}
+            <div className="mdl-layout mdl-js-layout mdl-layout--fixed-drawer">
+                <div className="mdl-layout__drawer">
+                    <span className="mdl-layout-title" style={{padding: 0}}>GeoSpatial Viz</span>
+                    <nav className="mdl-navigation">
+                        {/* Options */}
+                        {additionalViews}
+                    </nav>
+                </div>
+                <main className="mdl-layout__content">
+
+                    <div className="page-content">
+                        <MapGL
+                            {...viewport}
+                            mapStyle="mapbox://styles/anique/cj887jlt131vu2srt4ve78bdj"
+                            dragrotate={true}
+                            onViewportChange={this._onChangeViewport.bind(this)}
+                            mapboxApiAccessToken={this.MAPBOX_TOKEN} >
+                            <DeckGLOverlay className='deckoverlay' viewport={viewport}
+                                           strokeWidth={3}
+                                           data={data}
+                            />
+                        </MapGL>
+                        {outerViews}
+                    </div>
+                </main>
             </div>
 
         );

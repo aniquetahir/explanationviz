@@ -6,7 +6,7 @@ class Loading extends Component{
         const style = {
             position: 'absolute',
             bottom: '10%',
-            left: '25%',
+            right: '10%',
             width: '50%'
         };
 

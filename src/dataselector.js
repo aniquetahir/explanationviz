@@ -1,16 +1,16 @@
 import React,{Component} from 'react';
-
+import {Grid, Cell} from 'react-mdl';
 class DataSelector extends Component{
     render(){
         const {datasets} = this.props;
         let componentStyle = {
-            position: 'absolute',
-            left: '1%',
-            top: '1%'
+            width: '90%',
+            margin: 'auto'
         };
         return (
             <div className='data-selector' style={componentStyle}>
-                <table className="mdl-data-table mdl-js-data-table mdl-data-table--selectable mdl-shadow--2dp">
+                <h2>Select Dataset</h2>
+                <table style={{width: '100%'}} className="mdl-data-table mdl-js-data-table mdl-data-table--selectable mdl-shadow--2dp">
                     <thead>
                     <tr>
                         <th className="mdl-data-table__cell--non-numeric">Dataset Name</th>
@@ -34,6 +34,7 @@ class DataSelector extends Component{
     }
 }
 
+
 class AttributeSelector extends Component{
     constructor(props){
         super(props);
@@ -43,95 +44,87 @@ class AttributeSelector extends Component{
         }
     }
     render(){
-        const {nonspatialattributes, spatialattributes, onViewHistogram} = this.props;
-
-        let componentStyle = {
-            position: 'absolute',
-            left: '1%',
-            top: '1%',
-            width: '50%'
+        const {nonspatialattributes, spatialattributes, onAttributeSet} = this.props;
+        const componentStyle = {
+            width: '90%',
+            margin: 'auto'
         };
 
-        let selectedStyle = {
+        const selectedStyle = {
             background: "#4bd3ff"
         };
 
         return (
-            <div className="attribute-selector" style={componentStyle}>
-                <div style={{width: "100%", background:'rgba(0,0,0,0.5)'}} className="mdl-card mdl-shadow--2dp">
-                    <div className="mdl-card__title mdl-card--expand">
-                        <div className="mdl-grid">
-                            <div style={{color: 'lightgray'}} className="mdl-cell mdl-cell--12-col">
-                                <h2>Select Observation Attributes</h2>
-                            </div>
-                        </div>
-                        <div className="mdl-grid">
-                            <div className="mdl-cell mdl-cell--6-col">
-                                <table style={{width: '100%'}} className="mdl-data-table mdl-js-data-table mdl-data-table--selectable mdl-shadow--2dp">
-                                    <thead>
-                                    <tr>
-                                        <th className="mdl-data-table__cell--non-numeric">Non Spatial Attributes</th>
+                <div className="attribute-selector" style={componentStyle}>
+                <Grid>
+                    <Cell col={12}>
+                        <h4>Select Observation Attributes</h4>
+                    </Cell>
+                </Grid>
+                <Grid>
+                    <Cell col={12}>
+                        <table style={{width: '100%'}} className="mdl-data-table mdl-js-data-table mdl-data-table--selectable mdl-shadow--2dp">
+                            <thead>
+                            <tr>
+                                <th className="mdl-data-table__cell--non-numeric">Non Spatial Attributes</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {/* Iteratively list all the attributes */}
+                            {nonspatialattributes.map((d)=>{
+                                return (
+                                    <tr key={d.id} style={
+                                        (()=>{
+                                            if(d.id===this.state.nonspatial){return selectedStyle;}
+                                        })()
+                                    }
+                                        onClick={()=>this.setState({nonspatial: d.id})}>
+                                        <td className="mdl-data-table__cell--non-numeric">{d.name}</td>
                                     </tr>
-                                    </thead>
-                                    <tbody>
-                                    {/* Iteratively list all the attributes */}
-                                    {nonspatialattributes.map((d)=>{
-                                        return (
-                                            <tr key={d.id} style={
-                                                (()=>{
-                                                    if(d.id===this.state.nonspatial){return selectedStyle;}
-                                                })()
-                                            }
-                                                onClick={()=>this.setState({nonspatial: d.id})}>
-                                                <td className="mdl-data-table__cell--non-numeric">{d.name}</td>
-                                            </tr>
-                                        );
-                                    })}
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div className="mdl-cell mdl-cell--6-col">
-                                <table style={{width: '100%'}} className="mdl-data-table mdl-js-data-table mdl-data-table--selectable mdl-shadow--2dp">
-                                    <thead>
-                                    <tr>
-                                        <th className="mdl-data-table__cell--non-numeric">Spatial Attributes</th>
+                                );
+                            })}
+                            </tbody>
+                        </table>
+                    </Cell>
+                </Grid>
+
+                <Grid>
+                    <Cell col={12}>
+                        <table style={{width: '100%'}} className="mdl-data-table mdl-js-data-table mdl-data-table--selectable mdl-shadow--2dp">
+                            <thead>
+                            <tr>
+                                <th className="mdl-data-table__cell--non-numeric">Spatial Attributes</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {/* Iteratively list all the attributes */}
+                            {spatialattributes.map((d)=>{
+                                return (
+                                    <tr key={d.id} style={
+                                        (()=>{
+                                            if(d.id===this.state.spatial){return selectedStyle;}
+                                        })()
+                                    }
+                                        onClick={()=>this.setState({spatial: d.id})}>
+                                        <td className="mdl-data-table__cell--non-numeric">{d.name}</td>
                                     </tr>
-                                    </thead>
-                                    <tbody>
-                                    {/* Iteratively list all the attributes */}
-                                    {spatialattributes.map((d)=>{
-                                        return (
-                                            <tr key={d.id} style={
-                                                (()=>{
-                                                    if(d.id===this.state.spatial){return selectedStyle;}
-                                                })()
-                                            }
-                                                onClick={()=>this.setState({spatial: d.id})}>
-                                                <td className="mdl-data-table__cell--non-numeric">{d.name}</td>
-                                            </tr>
-                                        );
-                                    })}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="mdl-card__actions">
-                        <a onClick={onViewHistogram} className="mdl-button mdl-js-button mdl-button--raised mdl-button--accent">
-                            {/* TODO implement View Histogram */}
-                            View Attribute Histogram
-                        </a>
-                        <div className="mdl-layout-spacer"></div>
-                        <a className="mdl-button mdl-js-button mdl-button--raised mdl-button--colored"
-                           onClick={()=>{}}
-                        >
-                            Set
-                        </a>
-                    </div>
-                </div>
+                                );
+                            })}
+                            </tbody>
+                        </table>
+                    </Cell>
+                </Grid>
+                <a className="mdl-button mdl-js-button mdl-button--raised mdl-button--colored"
+                   onClick={()=>{onAttributeSet(this.state.nonspatial, this.state.spatial);}}
+                >
+                    Set
+                </a>
+
             </div>
 
         );
+
+
 
     }
 }
