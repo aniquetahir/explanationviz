@@ -57,11 +57,13 @@ export default class DeckGLOverlay extends Component{
                 extruded: false,
                 opacity: 0.7,
                 wireframe: false,
+                pickable: true,
+                onClick: d=>console.log("Clicked Value: ", d.object.value),
                 getPolygon: d => d.shape,
                 getElevation: d => parseFloat(d.value),
                 getFillColor: sigColorFunc,
                 getLineColor: d => [256, 256, 256],
-                getLineWidth: d => 1
+                getLineWidth: d => 20
             })
         ];
 

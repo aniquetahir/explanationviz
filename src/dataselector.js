@@ -22,7 +22,7 @@ class DataSelector extends Component{
                         return (
                             <tr key={d.id}>
                                 <td className="mdl-data-table__cell--non-numeric"
-                                    onClick={()=>{this.props.onDataSelect(d.id);}}>{d.name}</td>
+                                    onClick={()=>{this.props.onDataSelect(d.id);}}>{d.title}</td>
                             </tr>
                         );
                     })}
