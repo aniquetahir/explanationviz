@@ -16,7 +16,11 @@ app.get('/datasets.json', function (req, res) {
         {
             id: 301,
             name: 'yellowdata',
-            spatial: [{id:1, name: 'Pickup Location'},{id:2, name: 'Dropoff Location'}],
+            title: 'NYC Yellow Cab Data/Jan 16',
+            spatial: [{id:1, name: 'Pickup Location', indices: {lng:5, lat:6}},
+                {id:2, name: 'Dropoff Location', indices: {lng:9, lat:10}}],
+            temporal: [{id:1, name: 'Pickup Time', index: 0},
+                {id:2, name: 'Dropoff Time', indices: 0}],
             nonspatial: [
                 {id:0, name: 'Count'},
                 {id:1, name:'Passenger Count'},
