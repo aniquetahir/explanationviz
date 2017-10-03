@@ -26,7 +26,7 @@ export default class CartoSidepanel extends Component {
 
 
         const style={
-            width: '90%'
+            width: '100%'
         };
 
         return (
@@ -47,15 +47,22 @@ export default class CartoSidepanel extends Component {
                         <Cell col={2} style={{background: 'rgb(0,256,0)'}}>
                         </Cell>
                     </Grid>
+                    {/* Additional views explaining the data */}
+                    <Grid>
+                        <Cell col={12}>
+                            {infoViews}
+                        </Cell>
+                    </Grid>
+                    <Grid>
+                        <Cell col={12}>
+                            *Click on Zone to select spatial observation
+                        </Cell>
+                    </Grid>
 
-                </Cell>
-
-                {/* Additional views explaining the data */}
-                <Cell col={12}>
-                    {infoViews}
                 </Cell>
 
             </Grid>
+
 
         );
     }

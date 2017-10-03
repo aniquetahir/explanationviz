@@ -23,6 +23,7 @@ class DataMap extends Map {
         this.state.data=null;
         this.state.hoverObject=null;
         this.state.nonspatialattribute=null;
+        this.state.spatialattribute=null;
 
     }
 
@@ -94,10 +95,16 @@ class DataMap extends Map {
 
         let dataset = _.find(this.state.datasets,{id: this.state.datasetid});
         let attributename=null;
+        let spatialattributename=null;
         if(dataset) {
             let attribute = _.find(dataset.nonspatial, {id: nonspatialatt});
             if(attribute){
                 attributename = attribute.name;
+            }
+
+            attribute = _.find(dataset.nonspatial, {id: spatialatt});
+            if(attribute){
+                spatialattributename = attribute.name;
             }
         }
 
@@ -105,12 +112,13 @@ class DataMap extends Map {
         this.setState({
             loading: true,
             mode: this.MODE_HEATMAP_VIEW,
-            nonspatialattribute: attributename
+            nonspatialattribute: attributename,
+            spatialattribute: spatialattributename
         });
 
 
         // TODO Load Heatmap data
-        requestJson(`http://localhost:8080/cartogram.json?attributeid=${nonspatialatt}`,
+        requestJson(`http://localhost:8080/cartogram.json?datasetid=${this.state.datasetid}&spatialid=${spatialatt}&attributeid=${nonspatialatt}`,
             (err, resp)=>{
                 if(err){
                     console.log(err);
@@ -130,6 +138,9 @@ class DataMap extends Map {
     }
 
     changeHoverObject(object){
+        if(object){
+            document.body.style.cursor='pointer';
+        }
         this.setState({
             hoverObject: object
         });
