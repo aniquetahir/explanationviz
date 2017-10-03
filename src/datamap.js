@@ -7,6 +7,7 @@ import Loading from './loading.js';
 import {json as requestJson} from 'd3-request';
 import _ from 'lodash';
 import DeckGLOverlay from './deckgloverlay.js';
+import CartoSidepanel from './cartogram_sidepanel.js';
 
 class DataMap extends Map {
     constructor(props){
@@ -20,6 +21,8 @@ class DataMap extends Map {
         this.state.datasets = [];
         this.state.datasetid=null;
         this.state.data=null;
+        this.state.hoverObject=null;
+        this.state.nonspatialattribute=null;
 
     }
 
@@ -88,10 +91,21 @@ class DataMap extends Map {
 
     loadHeatmap(nonspatialatt, spatialatt){
         console.log("Loading Heatmap for "+nonspatialatt+"/"+spatialatt);
+
+        let dataset = _.find(this.state.datasets,{id: this.state.datasetid});
+        let attributename=null;
+        if(dataset) {
+            let attribute = _.find(dataset.nonspatial, {id: nonspatialatt});
+            if(attribute){
+                attributename = attribute.name;
+            }
+        }
+
         //Show Loading
         this.setState({
             loading: true,
-            mode: this.MODE_HEATMAP_VIEW
+            mode: this.MODE_HEATMAP_VIEW,
+            nonspatialattribute: attributename
         });
 
 
@@ -113,6 +127,12 @@ class DataMap extends Map {
 
         );
 
+    }
+
+    changeHoverObject(object){
+        this.setState({
+            hoverObject: object
+        });
     }
 
     render(){
@@ -149,6 +169,14 @@ class DataMap extends Map {
             );
         }
 
+        if(mode===this.MODE_HEATMAP_VIEW){
+            additionalViews.push(
+                  <CartoSidepanel key={++additionalViewKey}
+                        object={this.state.hoverObject}
+                        attribute={this.state.nonspatialattribute}
+                  />
+            );
+        }
 
         if(loading){
             outerViews.push(<Loading key={++outerViewKey} />);
@@ -176,6 +204,7 @@ class DataMap extends Map {
                             <DeckGLOverlay className='deckoverlay' viewport={viewport}
                                            strokeWidth={3}
                                            data={data}
+                                           onHoverPolygon={this.changeHoverObject.bind(this)}
                             />
                         </MapGL>
                         {outerViews}

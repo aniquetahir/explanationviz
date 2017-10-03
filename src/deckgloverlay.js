@@ -33,7 +33,7 @@ export default class DeckGLOverlay extends Component{
     }
 
     render() {
-        const {viewport, data} = this.props;
+        const {viewport, data, onHoverPolygon} = this.props;
         if (!data) {
             return null;
         }
@@ -58,7 +58,7 @@ export default class DeckGLOverlay extends Component{
                 opacity: 0.7,
                 wireframe: false,
                 pickable: true,
-                onClick: d=>console.log("Clicked Value: ", d.object.value),
+                onHover: d=>onHoverPolygon(d.object),
                 getPolygon: d => d.shape,
                 getElevation: d => parseFloat(d.value),
                 getFillColor: sigColorFunc,

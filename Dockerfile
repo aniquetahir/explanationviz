@@ -10,3 +10,4 @@ COPY listdirs.sh listdirs.sh
 RUN chmod +x listdirs.sh
 
 ENTRYPOINT ["/bin/sh","-c","./listdirs.sh"]
+
