@@ -1,4 +1,4 @@
-FROM aniquetahir/datapolygamy:0.0.2
+FROM aniquetahir/datapolygamy:0.0.4
 #RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 ENV PATH "$PATH:/root/programs/hadoop-2.8.1/bin"
 ENV HADOOP_HOME /root/programs/hadoop-2.8.1
