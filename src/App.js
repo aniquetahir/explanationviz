@@ -24,7 +24,7 @@ class Selection extends Component {
         };
         return (
             <div className="selection">
-                <button onClick={showPolygamy}>Data Polygamy</button>
+                <button onClick={showPolygamy}>Salient Features</button>
                 <button onClick={showAggravation}>Aggravation</button>
                 <button onClick={showIntervention}>Intervention</button>
             </div>
@@ -34,7 +34,7 @@ class Selection extends Component {
 
 class Intervention extends Component{
     render(){
-        return <DataMap />;
+        return <p>Intervention</p>;
     }
 }
 
@@ -46,7 +46,7 @@ class Aggravation extends Component{
 
 class Polygamy extends Component{
     render(){
-        return <p>Polygamy</p>;
+        return <DataMap />;
     }
 }
 

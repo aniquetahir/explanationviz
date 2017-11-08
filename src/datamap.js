@@ -23,6 +23,7 @@ class DataMap extends Map {
         this.state.data=null;
         this.state.hoverObject=null;
         this.state.nonspatialattribute=null;
+        this.state.explanations=null;
 
     }
 
@@ -109,23 +110,56 @@ class DataMap extends Map {
         });
 
 
-        // TODO Load Heatmap data
-        requestJson(`http://localhost:8080/cartogram.json?attributeid=${nonspatialatt}`,
-            (err, resp)=>{
-                if(err){
-                    console.log(err);
-                }else{
-                    this.setState({
-                        data: resp
-                    });
+        // TODO Spatial Attribute Selection/Dataset Id
+        let cartogramPromise = new Promise((resolve, reject)=>{
+            requestJson(`http://localhost:8080/cartogram.json?attributeid=${nonspatialatt}`,
+                (err, resp)=>{
+                    if(err){
+                        console.log(err);
+                    }else{
+                        this.setState({
+                            data: resp
+                        });
+                    }
+                    resolve();
+
                 }
-                this.setState({
-                    loading: false
-                });
+            );
+        });
 
-            }
+        // Explanation Selection
+        let explanationPromise = new Promise((resolve, reject)=>{
+            requestJson(`http://localhost:8080/cartogram.json?attributeid=${nonspatialatt}`,
+                (err, resp)=>{
+                    if(err){
+                        console.log(err);
+                    }else{
+                        let explanations = resp.map((exp, exp_index)=>{
+                            // Get the name of the attribute
+                            let attribute_name = _.find(dataset.nonspatial, {id: parseInt(exp.attribute)}).name;
+                            let rank = exp_index+1;
+                            let explanationText = `${rank}. Explanation with ${attribute_name}`;
+                            return {
+                                id: exp_index,
+                                text: explanationText,
+                                raw: exp
+                            }
+                        });
+                        this.setState({
+                            explanations: explanations
+                        });
+                    }
+                }
+            );
+        });
 
-        );
+        Promise.all([cartogramPromise, explanationPromise]).then(()=>{
+            this.setState({
+                loading: false
+            });
+        });
+
+
 
     }
 

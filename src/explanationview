@@ -1,0 +1,37 @@
+import React, {Component} from 'react';
+import {List, ListItem, ListItemContent} from 'react-mdl';
+
+class ExplanationView extends Component{
+    render() {
+        const {explanations, callback} = this.props;
+
+        const explanationStyle = {
+            position: 'absolute',
+            right: '0%',
+            top: '0%',
+            width: '50%',
+            height: '100%',
+            background: 'white',
+            overflow: 'auto'
+        };
+
+        let explanationListItems=explanations.map(exp=>{
+            return (
+                <ListItem>
+                    <ListItemContent onClick={()=>{callback(exp.id);}} icon="assessment">{exp.text}</ListItemContent>
+                </ListItem>
+            );
+        });
+
+        return (
+            <div className="explanation-container">
+                {/*<div className="explanation-container mdl-shadow--2dp" style={explanationStyle}>*/}
+                <List>
+                    {explanationListItems}
+                </List>
+            </div>
+        );
+    }
+}
+
+export default ExplanationView;

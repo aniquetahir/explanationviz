@@ -98,7 +98,35 @@ app.get('/cartogram.json', function(req, res){
         res.send(data);
         console.log(`Child process ended with code ${code}`);
     });
+});
 
+app.get('/explanations.json', function(req, res){
+    let datasetid=req.query.datasetid;
+    let attributeid=req.query.attributeid;
+
+    // TODO Get files relevant to dataset
+    const index_file = './datapolygamyutils/index/data';
+
+    // EXEC Python and get json response
+    let data = '';
+    res.setHeader('Content-Type', 'application/json');
+
+    const explanation_process = spawn('python3',
+        ['./datapolygamyutils/calculate_salient_explanation.py',
+            attributeid,
+            index_file
+        ]);
+
+    explanation_process.stdout.on('data', (d)=>{
+        data+=d;
+    });
+
+    explanation_process.stderr.on('data',(d)=>{console.log(`${d}`);});
+
+    explanation_process.on('close', (code)=>{
+        res.send(data);
+        console.log(`Child process ended with code ${code}`);
+    });
 
 });
 
