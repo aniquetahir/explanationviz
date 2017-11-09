@@ -8,6 +8,8 @@ import {json as requestJson} from 'd3-request';
 import _ from 'lodash';
 import DeckGLOverlay from './deckgloverlay.js';
 import CartoSidepanel from './cartogram_sidepanel.js';
+import ExplanationView from "./explanationview";
+
 
 class DataMap extends Map {
     constructor(props){
@@ -112,16 +114,16 @@ class DataMap extends Map {
 
         // TODO Spatial Attribute Selection/Dataset Id
         let cartogramPromise = new Promise((resolve, reject)=>{
-            requestJson(`http://localhost:8080/cartogram.json?attributeid=${nonspatialatt}`,
+            requestJson(`http://localhost:8080/cartogram.json?datasetid=${this.state.datasetid}&attributeid=${nonspatialatt}`,
                 (err, resp)=>{
                     if(err){
                         console.log(err);
+                        reject();
                     }else{
-                        this.setState({
-                            data: resp
-                        });
+                        console.log(this);
+                        resolve(resp);
+
                     }
-                    resolve();
 
                 }
             );
@@ -129,10 +131,11 @@ class DataMap extends Map {
 
         // Explanation Selection
         let explanationPromise = new Promise((resolve, reject)=>{
-            requestJson(`http://localhost:8080/cartogram.json?attributeid=${nonspatialatt}`,
+            requestJson(`http://localhost:8080/explanations.json?attributeid=${nonspatialatt}`,
                 (err, resp)=>{
                     if(err){
                         console.log(err);
+                        reject();
                     }else{
                         let explanations = resp.map((exp, exp_index)=>{
                             // Get the name of the attribute
@@ -145,23 +148,30 @@ class DataMap extends Map {
                                 raw: exp
                             }
                         });
-                        this.setState({
-                            explanations: explanations
-                        });
+                        resolve(explanations);
                     }
                 }
             );
         });
 
-        Promise.all([cartogramPromise, explanationPromise]).then(()=>{
+        Promise.all([cartogramPromise, explanationPromise]).then(([cartogramResp,explanationResp])=>{
             this.setState({
-                loading: false
+                loading: false,
+                data: cartogramResp,
+                explanations: explanationResp
+
             });
         });
 
 
 
     }
+
+    // TODO Implement this
+    renderExplanation(){
+        alert("Method not implemented");
+    }
+
 
     changeHoverObject(object){
         this.setState({
@@ -209,6 +219,13 @@ class DataMap extends Map {
                         object={this.state.hoverObject}
                         attribute={this.state.nonspatialattribute}
                   />
+            );
+
+            additionalViews.push(
+                <ExplanationView key={++additionalViewKey}
+                        explanations={this.state.explanations}
+                        callback={this.renderExplanation.bind(this)}
+                />
             );
         }
 

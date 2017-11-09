@@ -4,6 +4,9 @@ import {List, ListItem, ListItemContent} from 'react-mdl';
 class ExplanationView extends Component{
     render() {
         const {explanations, callback} = this.props;
+        if(!explanations){
+            return null;
+        }
 
         const explanationStyle = {
             position: 'absolute',
@@ -15,10 +18,14 @@ class ExplanationView extends Component{
             overflow: 'auto'
         };
 
+        const listItemStyle = {
+            cursor: 'pointer'
+        };
+
         let explanationListItems=explanations.map(exp=>{
             return (
                 <ListItem>
-                    <ListItemContent onClick={()=>{callback(exp.id);}} icon="assessment">{exp.text}</ListItemContent>
+                    <ListItemContent style={listItemStyle} onClick={()=>{callback(exp.id);}} icon="assessment">{exp.text}</ListItemContent>
                 </ListItem>
             );
         });

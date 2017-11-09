@@ -4,6 +4,11 @@ import {List, ListItem, ListItemContent, Grid, Cell} from 'react-mdl';
 export default class CartoSidepanel extends Component {
     render(){
         const {object, attribute} = this.props;
+
+        if(!attribute){
+            return null;
+        }
+
         let infoViews = [];
         let infoViewKey = 0;
 
@@ -53,11 +58,11 @@ export default class CartoSidepanel extends Component {
                             {infoViews}
                         </Cell>
                     </Grid>
-                    <Grid>
-                        <Cell col={12}>
-                            *Click on Zone to select spatial observation
-                        </Cell>
-                    </Grid>
+                    {/*<Grid>*/}
+                        {/*<Cell col={12}>*/}
+                            {/**Click on Zone to select spatial observation*/}
+                        {/*</Cell>*/}
+                    {/*</Grid>*/}
 
                 </Cell>
 

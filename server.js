@@ -77,7 +77,6 @@ app.get('/cartogram.json', function(req, res){
 
     if(!dataset){
         res.sendStatus(404);
-        res.send('');
         return;
     }
 
@@ -169,16 +168,16 @@ app.get('filtercartogram.json', function(req,res){
         return;
     }
 
-    let dataname = dataset.name;
-    if(spatialattribute>1){
-        dataname=dataname+spatialattribute;
-    }
-
-    const dataname=dataname;
-    const latindex=$2
-    const lngindex=$3
-    const zoneid=$4
-    const temporalindex=$5
+    // let dataname = dataset.name;
+    // if(spatialattribute>1){
+    //     dataname=dataname+spatialattribute;
+    // }
+    //
+    // const dataname=dataname;
+    // const latindex=$2
+    // const lngindex=$3
+    // const zoneid=$4
+    // const temporalindex=$5
     // run docker container to generate output
     // save output to file(guid)/memory?
     // python script to seperate files
