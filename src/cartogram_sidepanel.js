@@ -3,7 +3,7 @@ import {List, ListItem, ListItemContent, Grid, Cell} from 'react-mdl';
 
 export default class CartoSidepanel extends Component {
     render(){
-        const {object, attribute} = this.props;
+        const {object, attribute, showLegend} = this.props;
 
         if(!attribute){
             return null;
@@ -22,7 +22,7 @@ export default class CartoSidepanel extends Component {
                     </ListItem>
                     <ListItem twoLine>
                         <ListItemContent avatar="info" subtitle={object.value.toString()}>
-                            Average {attribute}
+                            Avg {attribute}
                         </ListItemContent>
                     </ListItem>
                 </List>
@@ -34,10 +34,10 @@ export default class CartoSidepanel extends Component {
             width: '100%'
         };
 
-        return (
-            <Grid className="cartogram-sidepanel" style={style}>
-                <Cell col={12}>
-                    {/* Legend for the Cartogram */}
+        let legend = [];
+        if(showLegend){
+            legend.push(
+                <div key={++infoViewKey}>
                     <Grid>
                         <Cell col={10}>
                             High {attribute}
@@ -47,11 +47,32 @@ export default class CartoSidepanel extends Component {
                     </Grid>
                     <Grid>
                         <Cell col={10}>
-                            Low {attribute}
+                        Low {attribute}
                         </Cell>
                         <Cell col={2} style={{background: 'rgb(0,256,0)'}}>
                         </Cell>
                     </Grid>
+                </div>
+            );
+        }else{
+            legend.push(
+                <div key={++infoViewKey}>
+                    <Grid>
+                        <Cell col={10}>
+                            Relevant Zone
+                        </Cell>
+                        <Cell col={2} style={{background: 'rgb(0,256,0)'}}>
+                        </Cell>
+                    </Grid>
+                </div>
+            );
+        }
+
+        return (
+            <Grid className="cartogram-sidepanel" style={style}>
+                <Cell col={12}>
+                    {/* Legend for the Cartogram */}
+                    {legend}
                     {/* Additional views explaining the data */}
                     <Grid>
                         <Cell col={12}>

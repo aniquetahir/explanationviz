@@ -25,7 +25,7 @@ class ExplanationView extends Component{
         let explanationListItems=explanations.map(exp=>{
             return (
                 <ListItem>
-                    <ListItemContent style={listItemStyle} onClick={()=>{callback(exp.id);}} icon="assessment">{exp.text}</ListItemContent>
+                    <ListItemContent style={listItemStyle} onClick={()=>{callback(exp);}} icon="assessment">{exp.text}</ListItemContent>
                 </ListItem>
             );
         });

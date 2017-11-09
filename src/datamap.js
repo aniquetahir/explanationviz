@@ -9,6 +9,7 @@ import _ from 'lodash';
 import DeckGLOverlay from './deckgloverlay.js';
 import CartoSidepanel from './cartogram_sidepanel.js';
 import ExplanationView from "./explanationview";
+import {Grid, Cell, FABButton, Icon} from 'react-mdl';
 
 
 class DataMap extends Map {
@@ -16,8 +17,9 @@ class DataMap extends Map {
         super(props);
         this.MODE_DATASET_SELECT = 1;
         this.MODE_ATTRIBUTE_SELECT = 2;
-        this.MODE_HISTOGRAM_VIEW = 3;
-        this.MODE_HEATMAP_VIEW = 4;
+        //this.MODE_HISTOGRAM_VIEW = 3;
+        this.MODE_HEATMAP_VIEW = 3;
+        this.MODE_EXPLANATION_VIEW = 4;
         this.state.mode = this.MODE_DATASET_SELECT;
         this.state.loading = true;
         this.state.datasets = [];
@@ -26,6 +28,8 @@ class DataMap extends Map {
         this.state.hoverObject=null;
         this.state.nonspatialattribute=null;
         this.state.explanations=null;
+        this.state.explanationattribute=null;
+        this.state.explanationdata=null;
 
     }
 
@@ -145,6 +149,7 @@ class DataMap extends Map {
                             return {
                                 id: exp_index,
                                 text: explanationText,
+                                nonspatialattribute: attribute_name,
                                 raw: exp
                             }
                         });
@@ -159,7 +164,6 @@ class DataMap extends Map {
                 loading: false,
                 data: cartogramResp,
                 explanations: explanationResp
-
             });
         });
 
@@ -168,8 +172,56 @@ class DataMap extends Map {
     }
 
     // TODO Implement this
-    renderExplanation(){
-        alert("Method not implemented");
+    renderExplanation(exp){
+        this.setState({
+           loading: true
+        });
+
+        // Get attribute
+        let attribute_name = exp.nonspatialattribute;
+
+        // Get cartogram for attribute
+        requestJson(`http://localhost:8080/cartogram.json?datasetid=${this.state.datasetid}&attributeid=${exp.raw.attribute}`,
+            (err, resp)=>{
+                if(err){
+                    console.log(err);
+                }else{
+                    let explanationdata = resp;
+
+                    // Figure out if positive or negative salient features matter
+                    let interesting_features=null;
+                    if(exp.raw.score < 0){
+                        interesting_features = exp.raw.negative;
+                    }else{
+                        interesting_features = exp.raw.positive;
+                    }
+
+                    let interesting_zones = interesting_features.map((f)=>{
+                        return f.zone;
+                    });
+
+                    // modify explanation data to show interesting zones
+                    explanationdata.timeline[0].patches =
+                        explanationdata.timeline[0].patches.map(p=>{
+                            if(interesting_zones.indexOf(p.id)<0){
+                                p.feature=1;
+                            }else{
+                                p.feature=3;
+                            }
+                            return p;
+                        });
+
+                    this.setState({
+                        explanationattribute: attribute_name,
+                        explanationdata: explanationdata,
+                        loading: false,
+                        mode: this.MODE_EXPLANATION_VIEW
+                    });
+
+                }
+            }
+        );
+
     }
 
 
@@ -179,8 +231,27 @@ class DataMap extends Map {
         });
     }
 
+    revertState(){
+        let mode = this.state.mode;
+        if(mode===this.MODE_ATTRIBUTE_SELECT){
+            this.setState({
+                mode: this.MODE_DATASET_SELECT
+            });
+        }else if(mode===this.MODE_HEATMAP_VIEW){
+            this.setState({
+               mode: this.MODE_ATTRIBUTE_SELECT,
+               data: null
+            });
+        }else if(mode===this.MODE_EXPLANATION_VIEW){
+            this.setState({
+               mode: this.MODE_HEATMAP_VIEW
+            });
+        }
+    }
+
     render(){
-        const {viewport, mode, loading, datasets, datasetid, data} = this.state;
+        const {viewport, mode, loading, datasets, datasetid} = this.state;
+        let data = this.state.data;
 
         let additionalViews = [];
         let outerViews = [];
@@ -218,6 +289,7 @@ class DataMap extends Map {
                   <CartoSidepanel key={++additionalViewKey}
                         object={this.state.hoverObject}
                         attribute={this.state.nonspatialattribute}
+                        showLegend={true}
                   />
             );
 
@@ -229,6 +301,19 @@ class DataMap extends Map {
             );
         }
 
+        if(mode===this.MODE_EXPLANATION_VIEW){
+            additionalViews.push(
+                <CartoSidepanel key={++additionalViewKey}
+                                object={this.state.hoverObject}
+                                attribute={this.state.explanationattribute}
+                                showLegend={false}
+                />
+            );
+
+            data = this.state.explanationdata;
+        }
+
+
         if(loading){
             outerViews.push(<Loading key={++outerViewKey} />);
         }
@@ -237,7 +322,19 @@ class DataMap extends Map {
         return (
             <div className="mdl-layout mdl-js-layout mdl-layout--fixed-drawer">
                 <div className="mdl-layout__drawer">
-                    <span className="mdl-layout-title" style={{padding: 0}}>GeoSpatial Viz</span>
+                    <Grid>
+                        <Cell col={3}>
+                            <FABButton mini colored onClick={this.revertState.bind(this)}>
+                                &lt;
+                            </FABButton>
+                        </Cell>
+                        <Cell col={9}>
+                            <span className="mdl-layout-title" style={{padding: 0}}>GeoSpatial Viz</span>
+                        </Cell>
+                    </Grid>
+
+
+
                     <nav className="mdl-navigation">
                         {/* Options */}
                         {additionalViews}
