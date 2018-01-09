@@ -93,9 +93,9 @@ class DataMap extends Map {
     }
 
     changeHoverObject(object){
-        this.setState({
-            hoverObject: object
-        });
+        // this.setState({
+        //     hoverObject: object
+        // });
     }
 
 
