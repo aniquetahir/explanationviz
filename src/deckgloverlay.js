@@ -38,30 +38,21 @@ export default class DeckGLOverlay extends Component{
             return null;
         }
 
-        const sigColorFunc = d=>{
-          if(d.feature==1){
-              return [0,0,0];
-          }else if(d.feature==2){
-              return [256,0,0];
-          }else{
-              return [0,256,0];
-          }
-        };
 
         const layers = [
             new PolygonLayer({
                 id: 'polygondata',
-                data: data.timeline[0].patches,
+                data: data,
                 filled: true,
                 stroked: true,
                 extruded: false,
                 opacity: 0.7,
                 wireframe: false,
                 pickable: true,
-                onHover: d=>onHoverPolygon(d.object),
-                getPolygon: d => d.shape,
-                getElevation: d => parseFloat(d.value),
-                getFillColor: sigColorFunc,
+                onHover: d=>onHoverPolygon(d),
+                getPolygon: d => d.polygon[0],
+                getElevation: d => 1,
+                getFillColor: d => [0,128,128],
                 getLineColor: d => [256, 256, 256],
                 getLineWidth: d => 20
             })
