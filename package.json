@@ -5,16 +5,18 @@
   "dependencies": {
     "cors": "^2.8.4",
     "d3-request": "^1.0.6",
-    "deck.gl": "^4.1.2",
+    "deck.gl": "^4.1.6",
     "echarts": "^3.8.5",
     "express": "^4.15.5",
     "lodash": "^4.17.4",
-    "luma.gl": "^4.0.3",
+    "luma.gl": "^4.0.6",
     "react": "^15.6.1",
     "react-dom": "^15.6.1",
-    "react-map-gl": "^3.0.4",
-    "react-mdl": "^1.10.3",
+    "react-map-gl": "^3.1.5",
+    "react-mdl": "^1.11.0",
     "react-scripts": "1.0.13",
+    "react-syntax-highlighter": "^6.1.1",
+    "sql-formatter": "^2.1.0",
     "terraformer-wkt-parser": "^1.1.2"
   },
   "scripts": {

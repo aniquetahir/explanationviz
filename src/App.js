@@ -3,6 +3,8 @@ import React, { Component } from 'react';
 import DataMap from './datamap.js';
 import './App.css';
 import {AttributeSelector} from "./dataselector";
+import GraphListView from './mainmenu/graphs';
+import {json as requestJson} from 'd3-request';
 
 const STATE_SELECTION = 1;
 const STATE_POLYGAMY = 2;
@@ -17,12 +19,32 @@ class Evaluation extends Component {
 }
 
 class Container extends Component {
+    constructor(props){
+        super(props);
+        this.state = {
+            statsData: []
+        }
+    }
+
+    componentDidMount(){
+        requestJson('data/taxistats.json',
+            (err, data) => {
+                if(err){
+                   console.log(err);
+                }else{
+                    this.setState({
+                        statsData: data
+                    });
+                }
+
+            }
+        );
+    }
 
     render(){
         return (
             <div className="container">
-                <Evaluation />
-
+                <GraphListView data={this.state.statsData} />
             </div>
         );
     }

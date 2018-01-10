@@ -7,6 +7,7 @@ export default class CartoSidepanel extends Component {
     constructor(){
         super();
     }
+
     componentDidMount(){
         this.plotChart()
     }
