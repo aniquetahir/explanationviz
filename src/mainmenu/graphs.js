@@ -5,6 +5,7 @@ import SyntaxHighlighter from 'react-syntax-highlighter';
 import {darcula} from 'react-syntax-highlighter/styles/hljs';
 import _ from 'lodash';
 import sqlFormatter from "sql-formatter";
+import {ContextMenu, ContextMenuTrigger, MenuItem} from 'react-contextmenu';
 
 class GraphView extends Component{
     componentDidMount(){
@@ -58,23 +59,33 @@ class GraphView extends Component{
     render(){
         const {data} = this.props;
         return (
-            <Cell col={3} className="graph-view">
-                <Card shadow={0} style={{width: '100%', height: '600px', margin: 0}}>
-                    <CardTitle expand style={{'padding-top': 0, 'padding-bottom':0}}>
-                        <div ref={node=>this.graph_node=node} style={{width: "100%", height: "100%", margin: 0, padding: '2px'}}>
-
-                        </div>
+                <Card shadow={0} className="graph_view" style={{width: '100%', height: '600px', margin: 0}}>
+                    <CardTitle expand style={{paddingTop: 0, paddingBottom:0}}>
+                        <ContextMenuTrigger id="menuShowViz" >
+                            <div ref={node=>this.graph_node=node}
+                                 style={{width: "100%", height: "100%", margin: 0, padding: '2px'}} />
+                        </ContextMenuTrigger>
+                        <ContextMenu id="menuShowViz">
+                            <MenuItem onClick={()=>{}}>
+                                Cartogram
+                            </MenuItem>
+                            <MenuItem  onClick={()=>{}}>
+                                Heatmap
+                            </MenuItem>
+                            <MenuItem  onClick={()=>{}}>
+                                Scatterplot
+                            </MenuItem>
+                        </ContextMenu>
                     </CardTitle>
-                    <CardText style = {{'text-align': 'left'}}>
+                    <CardText style = {{textAlign: 'left'}}>
                         <SyntaxHighlighter language='sql' style={darcula} customStyle={{height: '100px'}}>
                             {sqlFormatter.format(data.sql)}
                         </SyntaxHighlighter>
                     </CardText>
-                    <CardActions border>
-                        <Button raised>Explain</Button>
-                    </CardActions>
+                    {/*<CardActions border>*/}
+                        {/*<Button raised>Explain</Button>*/}
+                    {/*</CardActions>*/}
                 </Card>
-            </Cell>
         );
     }
 }
@@ -90,9 +101,13 @@ class GraphListView extends Component{
         let listIndex = 0;
 
         let subviews = data.map(
-            datum=>{
+            (datum,i)=>{
                 return (
-                    <GraphView data={datum} key={++listIndex} />
+                    <Grid style={i==0?{}:{marginTop: '100px'}} key={++listIndex}>
+                        <Cell col={12} style={{height: '500px', margin: 'auto'}}>
+                            <GraphView data={datum} />
+                        </Cell>
+                    </Grid>
                 );
             }
         );
@@ -100,14 +115,9 @@ class GraphListView extends Component{
 
 
         return (
-            <Grid>
+            <div>
                 {subviews}
-                <Cell col={3} style={{height: '500px', margin: 'auto'}}>
-                    <Button raised colored ripple>
-                        Custom Query
-                    </Button>
-                </Cell>
-            </Grid>
+            </div>
         );
     }
 }

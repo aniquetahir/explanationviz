@@ -9,7 +9,7 @@ import _ from 'lodash';
 import DeckGLOverlay from './deckgloverlay.js';
 import CartoSidepanel from './cartogram_sidepanel.js';
 import ExplanationView from "./explanationview";
-import {Grid, Cell, FABButton, Icon} from 'react-mdl';
+import {Grid, Cell, FABButton, Icon, Card, CardTitle} from 'react-mdl';
 import wkt from 'terraformer-wkt-parser';
 
 
@@ -123,7 +123,7 @@ class DataMap extends Map {
 
         additionalViews.push(
             <CartoSidepanel key={++additionalViewKey}
-                            data={data}
+                            data={this.props.statsData}
                             showLegend={false}
                             pltFunc={this.displayZones.bind(this)}
             />
@@ -135,42 +135,37 @@ class DataMap extends Map {
         }
 
         const drawerStyle = {
-            width: "25%"
+            position: 'absolute',
+            width: "33%",
+            bottom: '10px',
+            left: '10px',
+            top: '10px',
+            overflow: 'scroll'
         };
 
         return (
-            <div className="mdl-layout mdl-js-layout mdl-layout--fixed-drawer">
-                <div className="mdl-layout__drawer" style={drawerStyle}>
-                    <Grid>
-                        <Cell col={12}>
-                            <span className="mdl-layout-title" style={{padding: 0}}>Evaluation</span>
-                        </Cell>
-                    </Grid>
+            <div className="page-content">
 
+                <MapGL
+                    {...viewport}
+                    mapStyle="mapbox://styles/anique/cj887jlt131vu2srt4ve78bdj"
+                    dragrotate={true}
+                    onViewportChange={this._onChangeViewport.bind(this)}
+                    mapboxApiAccessToken={this.MAPBOX_TOKEN} >
+                    <DeckGLOverlay className='deckoverlay' viewport={viewport}
+                                   strokeWidth={3}
+                                   data={this.state.explanationdata}
+                                   onHoverPolygon={this.changeHoverObject.bind(this)}
+                    />
+                </MapGL>
 
-                    <nav className="mdl-navigation">
-                        {/* Options */}
+                <Card shadow={0} style={drawerStyle}>
+                    <CardTitle expand>
                         {additionalViews}
-                    </nav>
-                </div>
-                <main className="mdl-layout__content">
+                    </CardTitle>
+                </Card>
 
-                    <div className="page-content">
-                        <MapGL
-                            {...viewport}
-                            mapStyle="mapbox://styles/anique/cj887jlt131vu2srt4ve78bdj"
-                            dragrotate={true}
-                            onViewportChange={this._onChangeViewport.bind(this)}
-                            mapboxApiAccessToken={this.MAPBOX_TOKEN} >
-                            <DeckGLOverlay className='deckoverlay' viewport={viewport}
-                                           strokeWidth={3}
-                                           data={this.state.explanationdata}
-                                           onHoverPolygon={this.changeHoverObject.bind(this)}
-                            />
-                        </MapGL>
-                        {/*{outerViews}*/}
-                    </div>
-                </main>
+                {/*{outerViews}*/}
             </div>
 
         );
