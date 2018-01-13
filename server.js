@@ -127,6 +127,7 @@ app.get('/cartogram.json', function(req, res){
     });
 });
 
+
 app.post('/scatter.json', function(req, res){
     if(!_.isUndefined(req.body.sql)){
 
@@ -153,6 +154,93 @@ app.post('/scatter.json', function(req, res){
         });
     }
 });
+
+app.post('/hmap.json', (req,res)=>{
+    if(!_.isUndefined(req.body.sql)){
+
+        //res.setHeader('Content-Type','application/json');
+        let data = '';
+        let sql = req.body.sql;
+        const sql_process = spawn('java',
+            ['-cp',
+                'yellowtaxi.jar',
+                'edu.asu.viz.Heatmap',
+                'data/yellow_tripdata_2016-01.csv',
+                sql
+            ]);
+
+        sql_process.stdout.on('data', (d)=>{
+            data+=d;
+        });
+
+        sql_process.stderr.on('data',(d)=>{console.log(`${d}`);});
+
+        sql_process.on('close', (code)=>{
+            res.send(JSON.stringify({image: data}));
+            console.log(`Child process ended with code ${code}`);
+        });
+    }
+});
+
+app.post('/carto.json', (req, res)=>{
+    //res.send('hello');
+
+    if(!_.isUndefined(req.body.sql)){
+
+        //res.setHeader('Content-Type','application/json');
+        let data = '';
+        let sql = req.body.sql;
+        const sql_process = spawn('java',
+            ['-cp',
+                'yellowtaxi.jar',
+                'edu.asu.viz.Cartogram',
+                'data/yellow_tripdata_2016-01.csv',
+                sql,
+                'public/data/boundaries.csv'
+            ]);
+
+        sql_process.stdout.on('data', (d)=>{
+            data+=d;
+        });
+
+        sql_process.stderr.on('data',(d)=>{console.log(`${d}`);});
+
+        sql_process.on('close', (code)=>{
+            res.send(JSON.stringify({image: data}));
+            console.log(`Child process ended with code ${code}`);
+        });
+    }
+
+});
+
+app.post('/heatmap.json', function(req, res){
+    res.send("hello");
+    // if(!_.isUndefined(req.body.sql)){
+    //
+    //     //res.setHeader('Content-Type','application/json');
+    //     let data = '';
+    //     let sql = req.body.sql;
+    //     const sql_process = spawn('java',
+    //         ['-cp',
+    //             'yellowtaxi.jar',
+    //             'edu.asu.viz.Heatmap',
+    //             'data/yellow_tripdata_2016-01.csv',
+    //             sql
+    //         ]);
+    //
+    //     sql_process.stdout.on('data', (d)=>{
+    //         data+=d;
+    //     });
+    //
+    //     sql_process.stderr.on('data',(d)=>{console.log(`${d}`);});
+    //
+    //     sql_process.on('close', (code)=>{
+    //         res.send(JSON.stringify({image: data}));
+    //         console.log(`Child process ended with code ${code}`);
+    //     });
+    // }
+});
+
 
 app.get('/explanations.json', function(req, res){
     let datasetid=req.query.datasetid;

@@ -25,6 +25,8 @@ class AttributeGraphList extends Component{
                 <GraphListView
                     key={++graphViewKey}
                     getScatterPlot = {this.props.getScatterPlot}
+                    getHeatmapPlot = {this.props.getHeatmapPlot}
+                    getCartogramPlot = {this.props.getCartogramPlot}
                     data={data}
                 />
             )
@@ -92,6 +94,8 @@ export default class CartoSidepanel extends Component {
                         attribute={attr}
                         data={related_data}
                         getScatterPlot={this.props.getScatterPlot}
+                        getHeatmapPlot={this.props.getHeatmapPlot}
+                        getCartogramPlot={this.props.getCartogramPlot}
                     />
                 );
             }

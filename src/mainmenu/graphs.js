@@ -81,11 +81,11 @@ class GraphView extends Component{
                                  style={{width: "100%", height: "100%", margin: 0, padding: '2px'}} />
                         </ContextMenuTrigger>
                     </CardTitle>
-                    <CardText style = {{textAlign: 'left'}}>
-                        <SyntaxHighlighter language='sql' style={darcula} customStyle={{height: '100px'}}>
-                            {sqlFormatter.format(data.sql)}
-                        </SyntaxHighlighter>
-                    </CardText>
+                    {/*<CardText style = {{textAlign: 'left'}}>*/}
+                        {/*<SyntaxHighlighter language='sql' style={darcula} customStyle={{height: '100px'}}>*/}
+                            {/*{sqlFormatter.format(data.sql)}*/}
+                        {/*</SyntaxHighlighter>*/}
+                    {/*</CardText>*/}
                     {/*<CardActions border>*/}
                         {/*<Button raised>Explain</Button>*/}
                     {/*</CardActions>*/}
@@ -167,6 +167,38 @@ class GraphListView extends Component{
         }
     }
 
+    getHeatmapPlot(){
+        const data = this.state.selectedItems[0].data;
+        let clickedElement = this.state.selectedItems[0].index;
+        if(clickedElement!=null){
+            let xlabel = data.xlabel;
+
+            let sql = `
+                select pickup_longitude, pickup_latitude 
+                from data
+                where ${xlabel} = ${data.x[clickedElement]}
+            `;
+
+            this.props.getHeatmapPlot(sql);
+        }
+    }
+
+    getCartogramPlot(){
+        const data = this.state.selectedItems[0].data;
+        let clickedElement = this.state.selectedItems[0].index;
+        if(clickedElement!=null){
+            let xlabel = data.xlabel;
+
+            let sql = `
+                select pickup_longitude, pickup_latitude 
+                from data
+                where ${xlabel} = ${data.x[clickedElement]}
+            `;
+
+            this.props.getCartogramPlot(sql);
+        }
+    }
+
     render(){
         const {data} = this.props;
 
@@ -189,10 +221,10 @@ class GraphListView extends Component{
             <div>
                 {subviews}
                 <ContextMenu id={"menuShowViz"}>
-                    <MenuItem onClick={()=>{}}>
-                        Cartogram
+                    <MenuItem onClick={this.getCartogramPlot.bind(this)}>
+                        Choropleth Map
                     </MenuItem>
-                    <MenuItem  onClick={()=>{}}>
+                    <MenuItem  onClick={this.getHeatmapPlot.bind(this)}>
                         Heatmap
                     </MenuItem>
                     <MenuItem  onClick={this.getScatterPlot.bind(this)}>
