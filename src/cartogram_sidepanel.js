@@ -22,7 +22,9 @@ class AttributeGraphList extends Component{
 
         if(enabled){
             graphViews.push(
-                <GraphListView key={++graphViewKey}
+                <GraphListView
+                    key={++graphViewKey}
+                    getScatterPlot = {this.props.getScatterPlot}
                     data={data}
                 />
             )
@@ -89,6 +91,7 @@ export default class CartoSidepanel extends Component {
                         key={++attrItemKey}
                         attribute={attr}
                         data={related_data}
+                        getScatterPlot={this.props.getScatterPlot}
                     />
                 );
             }

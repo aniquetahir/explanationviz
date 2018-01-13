@@ -4,13 +4,14 @@ import React from 'react';
 import HistogramView from './histogramview.js';
 import {DataSelector, AttributeSelector} from './dataselector.js'
 import Loading from './loading.js';
-import {json as requestJson, csv as requestCSV} from 'd3-request';
+import {json as requestJson, csv as requestCSV, request} from 'd3-request';
 import _ from 'lodash';
 import DeckGLOverlay from './deckgloverlay.js';
 import CartoSidepanel from './cartogram_sidepanel.js';
 import ExplanationView from "./explanationview";
 import {Grid, Cell, FABButton, Icon, Card, CardTitle} from 'react-mdl';
 import wkt from 'terraformer-wkt-parser';
+import fromJS from 'immutable';
 
 
 class DataMap extends Map {
@@ -30,6 +31,7 @@ class DataMap extends Map {
         this.state.nonspatialattribute=null;
         this.state.explanations=null;
         this.state.explanationattribute=null;
+        this.state.map_image = null;
         this.state.explanationdata=[];
         this.logData = _.throttle(console.log, 1000, {trailing:false}).bind(this);
         this.setStateThrottled = _.throttle(this.setState, 300, {trailing: false}).bind(this);
@@ -44,6 +46,8 @@ class DataMap extends Map {
             data: data
         });
     }
+
+
 
     getData(){
         let data = {
@@ -112,19 +116,39 @@ class DataMap extends Map {
 
     }
 
+    getScatterPlot(sql){
+        console.log(sql);
+        request('http://localhost:8080/scatter.json')
+            .header("Content-Type", "application/json")
+            .post(
+                JSON.stringify({sql: sql}),
+                (err, data)=>{
+                    if(err){
+                        console.log(err);
+                    }else{
+                        console.log(data);
+                        this.setState({
+                            map_image: "data:image/png;base64," + JSON.parse(data.responseText).image
+                        });
+                    }
+                }
+            );
+    }
+
     render(){
         const {viewport, mode, loading, data, datasets, datasetid} = this.state;
 
         let additionalViews = [];
         let outerViews = [];
         let additionalViewKey = 0;
-        let outerViewKey=0;
+        let outerViewKey = 0;
 
 
         additionalViews.push(
             <CartoSidepanel key={++additionalViewKey}
                             data={this.props.statsData}
                             showLegend={false}
+                            getScatterPlot={this.getScatterPlot.bind(this)}
                             pltFunc={this.displayZones.bind(this)}
             />
         );
@@ -140,8 +164,41 @@ class DataMap extends Map {
             bottom: '10px',
             left: '10px',
             top: '10px',
-            overflow: 'scroll'
+            overflowY: 'scroll'
         };
+
+        const mapStyle = fromJS({
+            "version": 8,
+            "name": "Dark",
+            "sources": {
+                "mapbox": {
+                    "type": "vector",
+                    "url": "mapbox://styles/anique/cj887jlt131vu2srt4ve78bdj"
+                },
+                "overlay": {
+                    "type": "image",
+                    "url": this.state.map_image,
+                    "coordinates": [
+                        [-74.25, 40.9],
+                        [-73.7, 40.9],
+                        [-73.7, 40.5],
+                        [-74.25, 40.5]
+                    ]
+                }
+            },
+            "sprite": "mapbox://sprites/mapbox/dark-v9",
+            "glyphs": "mapbox://fonts/mapbox/{fontstack}/{range}.pbf",
+            "layers": [
+
+                {
+                    "id": "overlay",
+                    "source": "overlay",
+                    "type": "raster",
+                    "paint": {"raster-opacity": 0.85}
+                }
+
+            ]
+        });
 
         return (
             <div className="page-content">
