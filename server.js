@@ -3,6 +3,8 @@ var cors = require('cors');
 const app = express();
 const {spawn} = require('child_process');
 const _ = require('lodash');
+const bodyParser = require('body-parser');
+
 const datasets = [
     {
         id: 301,
@@ -26,6 +28,7 @@ const datasets = [
 
 
 app.use(cors());
+app.use(bodyParser.json());
 
 app.get('/', function (req, res) {
     res.send('Hello World!')
@@ -122,6 +125,170 @@ app.get('/cartogram.json', function(req, res){
         res.send(data);
         console.log(`Child process ended with code ${code}`);
     });
+});
+
+
+app.post('/scatter.json', function(req, res){
+    if(!_.isUndefined(req.body.sql)){
+
+        //res.setHeader('Content-Type','application/json');
+        let data = '';
+        let sql = req.body.sql;
+        const sql_process = spawn('java',
+            ['-cp',
+                'yellowtaxi.jar',
+                'edu.asu.viz.GeoSparkViz',
+                'data/yellow_tripdata_2016-01.csv',
+                sql
+            ]);
+
+        sql_process.stdout.on('data', (d)=>{
+            data+=d;
+        });
+
+        sql_process.stderr.on('data',(d)=>{console.log(`${d}`);});
+
+        sql_process.on('close', (code)=>{
+            res.send(JSON.stringify({image: data}));
+            console.log(`Child process ended with code ${code}`);
+        });
+    }
+});
+
+app.post('/hmap.json', (req,res)=>{
+    if(!_.isUndefined(req.body.sql)){
+
+        //res.setHeader('Content-Type','application/json');
+        let data = '';
+        let sql = req.body.sql;
+        const sql_process = spawn('java',
+            ['-cp',
+                'yellowtaxi.jar',
+                'edu.asu.viz.Heatmap',
+                'data/yellow_tripdata_2016-01.csv',
+                sql
+            ]);
+
+        sql_process.stdout.on('data', (d)=>{
+            data+=d;
+        });
+
+        sql_process.stderr.on('data',(d)=>{console.log(`${d}`);});
+
+        sql_process.on('close', (code)=>{
+            res.send(JSON.stringify({image: data}));
+            console.log(`Child process ended with code ${code}`);
+        });
+    }
+});
+
+app.post('/carto.json', (req, res)=>{
+    //res.send('hello');
+
+    if(!_.isUndefined(req.body.sql)){
+
+        //res.setHeader('Content-Type','application/json');
+        let data = '';
+        let sql = req.body.sql;
+        const sql_process = spawn('java',
+            ['-cp',
+                'yellowtaxi.jar',
+                'edu.asu.viz.Cartogram',
+                'data/yellow_tripdata_2016-01.csv',
+                sql,
+                'public/data/boundaries.csv'
+            ]);
+
+        sql_process.stdout.on('data', (d)=>{
+            data+=d;
+        });
+
+        sql_process.stderr.on('data',(d)=>{console.log(`${d}`);});
+
+        sql_process.on('close', (code)=>{
+            res.send(JSON.stringify({image: data}));
+            console.log(`Child process ended with code ${code}`);
+        });
+    }
+
+});
+
+app.post('/heatmap.json', function(req, res){
+    res.send("hello");
+    // if(!_.isUndefined(req.body.sql)){
+    //
+    //     //res.setHeader('Content-Type','application/json');
+    //     let data = '';
+    //     let sql = req.body.sql;
+    //     const sql_process = spawn('java',
+    //         ['-cp',
+    //             'yellowtaxi.jar',
+    //             'edu.asu.viz.Heatmap',
+    //             'data/yellow_tripdata_2016-01.csv',
+    //             sql
+    //         ]);
+    //
+    //     sql_process.stdout.on('data', (d)=>{
+    //         data+=d;
+    //     });
+    //
+    //     sql_process.stderr.on('data',(d)=>{console.log(`${d}`);});
+    //
+    //     sql_process.on('close', (code)=>{
+    //         res.send(JSON.stringify({image: data}));
+    //         console.log(`Child process ended with code ${code}`);
+    //     });
+    // }
+});
+
+app.post('/explain.json', (req, res)=> {
+    let args = [
+        '-cp',
+        'yellowtaxi.jar',
+        'edu.asu.yellowtaxi.GeneralHierarchicalInterventionZoneClustering',
+        '-f',
+        'public/data/yellowdata_columns_small.csv',
+        '-b',
+        'public/data/boundaries.csv',
+        '-s',
+        '0',
+        '-i',
+        '0','1','2','3','6','7','8','9','10','11',
+        '-q',
+        req.body.queries,
+        '-o',
+        req.body.expression,
+        '-n',
+        '5',
+
+    ];
+    ['k','minSel','maxSel','a'].forEach(k=>{
+       if(req.body[k]!==''){
+           args.push(`-${k}`);
+           args.push(req.body[k].toString());
+       }
+    });
+
+    args = _.flatten(args);
+
+    let data = '';
+    console.log('Executing: java "'+args.join('" "')+'"');
+
+    const expl_process = spawn('java',
+        args);
+
+    expl_process.stdout.on('data', (d)=>{
+        data+=d;
+    });
+
+    expl_process.stderr.on('data',(d)=>{console.log(`${d}`);});
+
+    expl_process.on('close', (code)=>{
+        res.send(data);
+        console.log(`Child process ended with code ${code}`);
+    });
+
+
 });
 
 app.get('/explanations.json', function(req, res){

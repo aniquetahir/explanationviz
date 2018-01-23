@@ -1,12 +1,24 @@
 import React,{Component} from 'react';
-import {Grid, Cell, Card, CardTitle, CardText, CardActions, Button} from 'react-mdl';
+import {Grid, Cell, Card, CardTitle, CardText, CardActions, Button, Dialog, DialogTitle, DialogActions, DialogContent} from 'react-mdl';
 import * as echarts from 'echarts';
 import SyntaxHighlighter from 'react-syntax-highlighter';
-import {darcula} from 'react-syntax-highlighter/styles/hljs';
+import {darcula, tomorrow} from 'react-syntax-highlighter/styles/hljs';
 import _ from 'lodash';
 import sqlFormatter from "sql-formatter";
+import {ContextMenu, ContextMenuTrigger, MenuItem} from 'react-contextmenu';
+import * as dialogPolyfill from 'dialog-polyfill';
 
 class GraphView extends Component{
+    constructor(props){
+        super(props);
+        this.state = {
+            clickedElement: null
+        };
+
+        this.deferredSetState = _.debounce(this.setState, 300).bind(this);
+        this.boolShowSQL = false;
+    }
+
     componentDidMount(){
         this.plotGraph(this.props.data);
     }
@@ -52,29 +64,33 @@ class GraphView extends Component{
             };
 
             myChart.setOption(option);
+            myChart.on('contextmenu', (params)=>{
+                this.props.setSelectedItems([{index: params.dataIndex, data: data}]);
+            });
         }
     }
+
+
 
     render(){
         const {data} = this.props;
         return (
-            <Cell col={3} className="graph-view">
-                <Card shadow={0} style={{width: '100%', height: '600px', margin: 0}}>
-                    <CardTitle expand style={{'padding-top': 0, 'padding-bottom':0}}>
-                        <div ref={node=>this.graph_node=node} style={{width: "100%", height: "100%", margin: 0, padding: '2px'}}>
-
-                        </div>
+                <Card shadow={0} className="graph_view" style={{width: '100%', height: '600px', margin: 0}}>
+                    <CardTitle expand style={{paddingTop: 0, paddingBottom:0}}>
+                        <ContextMenuTrigger id={"menuShowViz"} >
+                            <div ref={node=>this.graph_node=node}
+                                 style={{width: "100%", height: "100%", margin: 0, padding: '2px'}} />
+                        </ContextMenuTrigger>
                     </CardTitle>
-                    <CardText style = {{'text-align': 'left'}}>
-                        <SyntaxHighlighter language='sql' style={darcula} customStyle={{height: '100px'}}>
-                            {sqlFormatter.format(data.sql)}
-                        </SyntaxHighlighter>
-                    </CardText>
-                    <CardActions border>
-                        <Button raised>Explain</Button>
-                    </CardActions>
+                    {/*<CardText style = {{textAlign: 'left'}}>*/}
+                        {/*<SyntaxHighlighter language='sql' style={darcula} customStyle={{height: '100px'}}>*/}
+                            {/*{sqlFormatter.format(data.sql)}*/}
+                        {/*</SyntaxHighlighter>*/}
+                    {/*</CardText>*/}
+                    {/*<CardActions border>*/}
+                        {/*<Button raised>Explain</Button>*/}
+                    {/*</CardActions>*/}
                 </Card>
-            </Cell>
         );
     }
 }
@@ -82,6 +98,146 @@ class GraphView extends Component{
 class GraphListView extends Component{
     constructor(props){
         super(props);
+        this.state = {
+            selectedItems: [],
+            dialogSQL: "No SQL"
+        };
+
+        this.handleOpenDialog = this.handleOpenDialog.bind(this);
+        this.handleCloseDialog = this.handleCloseDialog.bind(this);
+    }
+
+    componentDidMount(){
+        if(!_.isUndefined(this.dialog)) {
+            console.log(this.dialog);
+            dialogPolyfill.registerDialog(this.dialog);
+        }
+    }
+
+    componentDidUpdate(){
+        if(!_.isUndefined(this.dialog)) {
+            dialogPolyfill.registerDialog(this.dialog);
+        }
+    }
+
+    handleOpenDialog() {
+        this.setState({
+            openDialog: true
+        });
+    }
+
+    handleCloseDialog() {
+        this.setState({
+            openDialog: false
+        });
+    }
+
+
+    setSelectedItems(items){
+        this.setState({
+           selectedItems: items
+        });
+        console.log(items);
+    }
+
+    showSQL(){
+
+        const data = this.state.selectedItems[0].data;
+        let clickedElement = this.state.selectedItems[0].index;
+        if(clickedElement!=null){
+            let ylabel = data.ylabel;
+            let xlabel = data.xlabel;
+
+            if(ylabel==="Trips"){
+                ylabel = 'count(*)'
+            }
+
+            let sql = `
+                select ${ylabel} 
+                from data
+                where ${xlabel} = ${data.x[clickedElement]}
+            `;
+
+            this.handleOpenDialog();
+            this.setState({
+                dialogSQL: sql
+            })
+        }
+    }
+
+    getScatterPlot(){
+        const data = this.state.selectedItems[0].data;
+        let clickedElement = this.state.selectedItems[0].index;
+        if(clickedElement!=null){
+            let xlabel = data.xlabel;
+
+            let sql = `
+                select pickup_longitude, pickup_latitude 
+                from data
+                where ${xlabel} = ${data.x[clickedElement]}
+            `;
+
+            this.props.getScatterPlot(sql);
+        }
+    }
+
+    getHeatmapPlot(){
+        const data = this.state.selectedItems[0].data;
+        let clickedElement = this.state.selectedItems[0].index;
+        if(clickedElement!=null){
+            let xlabel = data.xlabel;
+
+            let sql = `
+                select pickup_longitude, pickup_latitude 
+                from data
+                where ${xlabel} = ${data.x[clickedElement]}
+            `;
+
+            this.props.getHeatmapPlot(sql);
+        }
+    }
+
+    getCartogramPlot(){
+        const data = this.state.selectedItems[0].data;
+        let clickedElement = this.state.selectedItems[0].index;
+        if(clickedElement!=null){
+            let xlabel = data.xlabel;
+
+            let sql = `
+                select pickup_longitude, pickup_latitude 
+                from data
+                where ${xlabel} = ${data.x[clickedElement]}
+            `;
+
+            this.props.getCartogramPlot(sql);
+        }
+    }
+
+    addVariable(){
+        const {getContext}=this.props;
+        const context = getContext();
+        const data = this.state.selectedItems[0].data;
+        let clickedElement = this.state.selectedItems[0].index;
+        if(clickedElement!=null){
+            let ylabel = data.ylabel;
+            let xlabel = data.xlabel;
+
+            if(ylabel==="Trips"){
+                ylabel = 'count(*)'
+            }
+
+            let sql = `
+                select ${ylabel} 
+                from data
+                where ${xlabel} = ${data.x[clickedElement]}
+            `;
+
+            sql = sql.replace(new RegExp('tpep_pickup_datetime', 'g'), 'dayofmonth(tpep_pickup_datetime)');
+            sql = sql.replace(new RegExp('tpep_dropoff_datetime', 'g'), 'dayofmonth(tpep_dropoff_datetime)');
+
+            context.addVariable(sql);
+        }
+
     }
 
     render(){
@@ -90,24 +246,52 @@ class GraphListView extends Component{
         let listIndex = 0;
 
         let subviews = data.map(
-            datum=>{
+            (datum,i)=>{
                 return (
-                    <GraphView data={datum} key={++listIndex} />
+                    <Grid style={i==0?{}:{marginTop: '100px'}} key={++listIndex}>
+                        <Cell col={12} style={{height: '500px', margin: 'auto'}}>
+                            <GraphView setSelectedItems={_.debounce(this.setSelectedItems,300).bind(this)} data={datum} />
+                        </Cell>
+                    </Grid>
                 );
             }
         );
 
 
-
         return (
-            <Grid>
+            <div>
                 {subviews}
-                <Cell col={3} style={{height: '500px', margin: 'auto'}}>
-                    <Button raised colored ripple>
-                        Custom Query
-                    </Button>
-                </Cell>
-            </Grid>
+                <ContextMenu id={"menuShowViz"}>
+                    <MenuItem onClick={this.getCartogramPlot.bind(this)}>
+                        Choropleth Map
+                    </MenuItem>
+                    <MenuItem  onClick={this.getHeatmapPlot.bind(this)}>
+                        Heatmap
+                    </MenuItem>
+                    <MenuItem  onClick={this.getScatterPlot.bind(this)}>
+                        Scatterplot
+                    </MenuItem>
+                    <MenuItem onClick={()=>this.showSQL()}
+                    >
+                        Show SQL
+                    </MenuItem>
+                    <MenuItem onClick={()=>this.addVariable()}>
+                        Add as Variable
+                    </MenuItem>
+                </ContextMenu>
+
+                <Dialog open={this.state.openDialog} ref={dialog=>this.dialog=dialog==null?null:dialog.dialogRef}>
+                    {/*<DialogTitle>SQL</DialogTitle>*/}
+                    <DialogContent>
+                        <SyntaxHighlighter language='sql' style={tomorrow} customStyle={{textAlign: "left"}}>
+                            {sqlFormatter.format(this.state.dialogSQL)}
+                        </SyntaxHighlighter>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button type='button' onClick={this.handleCloseDialog}>Close</Button>
+                    </DialogActions>
+                </Dialog>
+            </div>
         );
     }
 }

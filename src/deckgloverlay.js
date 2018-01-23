@@ -33,29 +33,47 @@ export default class DeckGLOverlay extends Component{
     }
 
     render() {
-        const {viewport, data, onHoverPolygon} = this.props;
+        const {viewport, data, onHoverPolygon, polyDraw} = this.props;
         if (!data) {
             return null;
         }
 
 
+        let closedPolygon = polyDraw.slice();
+        closedPolygon.push(polyDraw[0]);
         const layers = [
             new PolygonLayer({
-                id: 'polygondata',
+                id: 'explanationdata',
                 data: data,
                 filled: true,
                 stroked: true,
                 extruded: false,
-                opacity: 0.7,
+                opacity: 0.5,
                 wireframe: false,
-                pickable: true,
-                onHover: d=>onHoverPolygon(d),
-                getPolygon: d => d.polygon[0],
-                getElevation: d => 1,
-                getFillColor: d => [0,128,128],
-                getLineColor: d => [256, 256, 256],
-                getLineWidth: d => 20
+                pickable: false,
+                // onHover: d=>onHoverPolygon(d),
+                getPolygon: d => d.polygon,
+                getElevation: d => 0,
+                getFillColor: d => [247,148,0],
+                getLineColor: d => [255, 255, 255],
+                getLineWidth: d => 50
             })
+            // new PolygonLayer({
+            //     id: 'polygondata',
+            //     data: [{"a":"b"}],
+            //     filled: false,
+            //     stroked: true,
+            //     extruded: false,
+            //     opacity: 1,
+            //     wireframe: false,
+            //     pickable: true,
+            //     onHover: d=>onHoverPolygon(d),
+            //     getPolygon: d => closedPolygon,
+            //     getElevation: d => 0,
+            //     getFillColor: d => [255,125,125],
+            //     getLineColor: d => [256, 0, 0],
+            //     getLineWidth: d => 100
+            // })
         ];
 
         return (

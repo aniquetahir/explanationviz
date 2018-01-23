@@ -14,7 +14,7 @@ const STATE_INTERVENTION = 4;
 
 class Evaluation extends Component {
     render(){
-        return <DataMap/>;
+        return <DataMap statsData={this.props.statsData} />;
     }
 }
 
@@ -44,7 +44,8 @@ class Container extends Component {
     render(){
         return (
             <div className="container">
-                <GraphListView data={this.state.statsData} />
+                <Evaluation statsData={this.state.statsData} />
+                {/*<GraphListView data={this.state.statsData} />*/}
             </div>
         );
     }

@@ -1,17 +1,18 @@
-import MapGL from 'react-map-gl';
+import ReactMapGL from 'react-map-gl';
 import Map from './map.js';
 import React from 'react';
-import HistogramView from './histogramview.js';
-import {DataSelector, AttributeSelector} from './dataselector.js'
 import Loading from './loading.js';
-import {json as requestJson, csv as requestCSV} from 'd3-request';
+import {json as requestJson, csv as requestCSV, request} from 'd3-request';
 import _ from 'lodash';
 import DeckGLOverlay from './deckgloverlay.js';
 import CartoSidepanel from './cartogram_sidepanel.js';
-import ExplanationView from "./explanationview";
-import {Grid, Cell, FABButton, Icon} from 'react-mdl';
+import {Grid, Cell, FABButton, Icon, Card, CardTitle, Snackbar} from 'react-mdl';
 import wkt from 'terraformer-wkt-parser';
-
+import {fromJS} from 'immutable';
+import SyntaxHighlighter from 'react-syntax-highlighter';
+import {darcula, tomorrow} from 'react-syntax-highlighter/styles/hljs';
+import sqlFormatter from "sql-formatter";
+import VariableView from './mainmenu/variableview';
 
 class DataMap extends Map {
     constructor(props){
@@ -30,9 +31,19 @@ class DataMap extends Map {
         this.state.nonspatialattribute=null;
         this.state.explanations=null;
         this.state.explanationattribute=null;
+        this.state.map_image = null;
         this.state.explanationdata=[];
         this.logData = _.throttle(console.log, 1000, {trailing:false}).bind(this);
         this.setStateThrottled = _.throttle(this.setState, 300, {trailing: false}).bind(this);
+        this.state.variables = [];
+
+        // Variables for holding the sql for the visualizations
+        this.handleShowSnackbar = this.handleShowSnackbar.bind(this);
+        this.handleTimeoutSnackbar = this.handleTimeoutSnackbar.bind(this);
+        this.state.vizQuery = "";
+        this.state.isSnackbarActive= false;
+
+        this.state.polyDraw = [];
     }
 
     componentDidMount(){
@@ -44,6 +55,17 @@ class DataMap extends Map {
             data: data
         });
     }
+
+    handleShowSnackbar() {
+        this.setState({ isSnackbarActive: true });
+    }
+    handleTimeoutSnackbar() {
+        this.setState({ isSnackbarActive: false });
+        this.handleShowSnackbar();
+    }
+
+
+
 
     getData(){
         let data = {
@@ -112,20 +134,171 @@ class DataMap extends Map {
 
     }
 
+    createWKT(poly){
+      let wkt = "POLYGON ((";
+      poly.forEach(coord=>{wkt+=`${coord[0]} ${coord[1]}, `});
+      wkt+=`${poly[0][0]} ${poly[0][1]}))`;
+      return wkt;
+    }
+
+
+    getScatterPlot(sql){
+        console.log(sql);
+        const {polyDraw} = this.state;
+        let query_sql = sql;
+        if(polyDraw.length>=3){
+            query_sql = sql + ` and ST_CONTAINS(ST_GeomFromWKT('${this.createWKT(polyDraw)}'), ST_Point(
+                CAST(pickup_longitude AS DECIMAL(24,14)),CAST(pickup_latitude AS DECIMAL(24,14)) 
+            ))`;
+        }
+
+        request('http://'+window.location.hostname+':8080/scatter.json')
+            .header("Content-Type", "application/json")
+            .post(
+                JSON.stringify({sql: query_sql}),
+                (err, data)=>{
+                    if(err){
+                        console.log(err);
+                    }else{
+                        console.log(data);
+                        let where = sql.toLowerCase().split("where")[1];
+
+                        if(polyDraw.length >=3){
+                            where += " AND ST_CONTAINS('"+this.createWKT(polyDraw)+"', taxi.pickup)"
+                        }
+                        this.setState({
+                            map_image: "data:image/png;base64," + JSON.parse(data.responseText).image,
+                            vizQuery: `SELECT ScatterPlot(taxi.pickup) FROM NYCtaxi taxi WHERE ${where}`
+                        });
+                        this.handleShowSnackbar();
+                    }
+                }
+            );
+    }
+
+    getHeatmapPlot(sql){
+        console.log(sql);
+        const {polyDraw} = this.state;
+        let query_sql = sql;
+        if(polyDraw.length>=3){
+            query_sql = sql + ` and ST_CONTAINS(ST_GeomFromWKT('${this.createWKT(polyDraw)}'), ST_Point(
+                CAST(pickup_longitude AS DECIMAL(24,14)),CAST(pickup_latitude AS DECIMAL(24,14)) 
+            ))`;
+        }
+
+        request('http://'+window.location.hostname+':8080/hmap.json')
+            .header("Content-Type", "application/json")
+            .post(
+              JSON.stringify({sql: query_sql}),
+                (err, data)=> {
+                  if(err){
+                      console.log(err);
+                  }else{
+                      console.log(data);
+                      let where = sql.toLowerCase().split("where")[1];
+
+                      if(polyDraw.length >=3){
+                          where += " AND ST_CONTAINS('"+this.createWKT(polyDraw)+"', taxi.pickup)"
+                      }
+                      this.setState({
+                          map_image: "data:image/png;base64," + JSON.parse(data.responseText).image,
+                          vizQuery: `SELECT HeatMap(taxi.pickup) FROM NYCtaxi taxi WHERE ${where}`
+                      });
+                      this.handleShowSnackbar();
+                  }
+                }
+            );
+    }
+
+    getCartogramPlot(sql){
+        console.log(sql);
+        const {polyDraw} = this.state;
+
+        let query_sql = sql;
+        if(polyDraw.length>=3){
+            query_sql = sql + ` and ST_CONTAINS(ST_GeomFromWKT('${this.createWKT(polyDraw)}'), ST_Point(
+                CAST(pickup_longitude AS DECIMAL(24,14)),CAST(pickup_latitude AS DECIMAL(24,14)) 
+            ))`;
+        }
+
+        request('http://'+window.location.hostname+':8080/carto.json')
+            .header("Content-Type", "application/json")
+            .post(
+                JSON.stringify({sql: query_sql}),
+                (err, data)=> {
+                    if(err){
+                        console.log(err);
+                    }else{
+                        console.log(data);
+                        let where = sql.toLowerCase().split("where")[1];
+
+                        if(polyDraw.length >=3){
+                            where += " AND ST_CONTAINS('"+this.createWKT(polyDraw)+"', taxi.pickup)"
+                        }
+                        this.setState({
+                            map_image: "data:image/png;base64," + JSON.parse(data.responseText).image,
+                            vizQuery: `SELECT ChoroplethMap(taxi.pickup) FROM NYCtaxi taxi, AreaLandmarks arealm WHERE ${where}`
+                        });
+                        this.handleShowSnackbar();
+                    }
+                }
+            );
+    }
+
+    printClickCoordinates(event){
+        //console.log(event);
+        let coords = this.state.polyDraw;
+        coords.push(event.lngLat);
+
+        this.setState({
+            polyDraw:coords
+        });
+
+        console.log(coords);
+    }
+
+    clearPolyDraw(){
+        this.setState({
+            polyDraw: []
+        });
+    }
+
+    addVariable(sql){
+        let variables = this.state.variables.slice();
+        variables.push(sql);
+
+        this.setStateThrottled({
+            variables: variables
+        });
+
+        console.log(sql);
+
+
+    }
+
+    getContext(){
+        return this;
+    }
+
+
     render(){
-        const {viewport, mode, loading, data, datasets, datasetid} = this.state;
+        const {viewport, mode, loading, data, datasets, datasetid, isSnackbarActive} = this.state;
 
         let additionalViews = [];
         let outerViews = [];
         let additionalViewKey = 0;
-        let outerViewKey=0;
+        let outerViewKey = 0;
 
 
         additionalViews.push(
             <CartoSidepanel key={++additionalViewKey}
-                            data={data}
+                            data={this.props.statsData}
                             showLegend={false}
+                            getScatterPlot={this.getScatterPlot.bind(this)}
+                            getHeatmapPlot={this.getHeatmapPlot.bind(this)}
+                            getCartogramPlot={this.getCartogramPlot.bind(this)}
                             pltFunc={this.displayZones.bind(this)}
+                            getContext={this.getContext.bind(this)}
             />
         );
 
@@ -135,42 +308,163 @@ class DataMap extends Map {
         }
 
         const drawerStyle = {
-            width: "25%"
+            position: 'absolute',
+            width: "33%",
+            bottom: '10px',
+            left: '10px',
+            top: '10px',
+            overflowY: 'scroll'
         };
 
+
+        const mapStyle = fromJS({
+            "version": 8,
+            "name": "Light",
+            "sources": {
+                "mapbox": {
+                    "type": "vector",
+                    "url": "mapbox://mapbox.mapbox-streets-v6"
+                },
+                "overlay": {
+                    "type": "image",
+                    "url": this.state.map_image==null?"":this.state.map_image,
+                    "coordinates": [
+                                [-74.25, 40.9],
+                                [-73.7, 40.9],
+                                [-73.7, 40.5],
+                                [-74.25, 40.5]
+                    ]
+                }
+                // "overlay": {
+                //     "type": "image",
+                //     "url": this.state.map_image,
+                //     "coordinates": [
+                //         [-74.25, 40.9],
+                //         [-73.7, 40.9],
+                //         [-73.7, 40.5],
+                //         [-74.25, 40.5]
+                //     ]
+                // }
+            },
+            "sprite": "mapbox://sprites/mapbox/dark-v9",
+            "glyphs": "mapbox://fonts/mapbox/{fontstack}/{range}.pbf",
+            "layers": [
+                {
+                    "id": "background",
+                    "type": "background",
+                    "paint": {"background-color": "#111"}
+                },
+                {
+                    "id": "water",
+                    "source": "mapbox",
+                    "source-layer": "water",
+                    "type": "fill",
+                    "paint": {"fill-color": "#2c2c2c"}
+                },
+                {
+                    "id": "boundaries",
+                    "source": "mapbox",
+                    "source-layer": "admin",
+                    "type": "line",
+                    "paint": {"line-color": "#797979", "line-dasharray": [2, 2, 6, 2]},
+                    "filter": ["all", ["==", "maritime", 0]]
+                },
+                {
+                    "id": "overlay",
+                    "source": "overlay",
+                    "type": "raster",
+                    "paint": {"raster-opacity": 0.85}
+                },
+                {
+                    "id": "cities",
+                    "source": "mapbox",
+                    "source-layer": "place_label",
+                    "type": "symbol",
+                    "layout": {
+                        "text-field": "{name_en}",
+                        "text-font": ["DIN Offc Pro Bold", "Arial Unicode MS Bold"],
+                        "text-size": [
+                            "interpolate",
+                            ["linear"],
+                            ["zoom"],
+                            4, 9,
+                            6, 12
+                        ]
+                    },
+                    "paint": {
+                        "text-color": "#969696",
+                        "text-halo-width": 2,
+                        "text-halo-color": "rgba(0, 0, 0, 0.85)"
+                    }
+                },
+                {
+                    "id": "states",
+                    "source": "mapbox",
+                    "source-layer": "state_label",
+                    "type": "symbol",
+                    "layout": {
+                        "text-transform": "uppercase",
+                        "text-field": "{name_en}",
+                        "text-font": ["DIN Offc Pro Bold", "Arial Unicode MS Bold"],
+                        "text-letter-spacing": 0.15,
+                        "text-max-width": 7,
+                        "text-size": [
+                            "interpolate",
+                            ["linear"],
+                            ["zoom"],
+                            4, 10,
+                            6, 14
+                        ]
+                    },
+                    "filter": [">=", "area", 80000],
+                    "paint": {
+                        "text-color": "#969696",
+                        "text-halo-width": 2,
+                        "text-halo-color": "rgba(0, 0, 0, 0.85)"
+                    }
+                }
+            ]
+        });
+
         return (
-            <div className="mdl-layout mdl-js-layout mdl-layout--fixed-drawer">
-                <div className="mdl-layout__drawer" style={drawerStyle}>
-                    <Grid>
-                        <Cell col={12}>
-                            <span className="mdl-layout-title" style={{padding: 0}}>Evaluation</span>
-                        </Cell>
-                    </Grid>
+            <div className="page-content">
 
+                <ReactMapGL
+                    {...viewport}
+                    onClick={this.printClickCoordinates.bind(this)}
+                    mapStyle={mapStyle}
+                    dragrotate={true}
+                    onViewportChange={this._onChangeViewport.bind(this)}
+                    mapboxApiAccessToken={this.MAPBOX_TOKEN} >
+                    <DeckGLOverlay ref={deck=>this.deckGL=deck} className='deckoverlay' viewport={viewport}
+                                   strokeWidth={3}
+                                   data={this.state.explanationdata}
+                                   polyDraw={this.state.polyDraw}
+                                   onHoverPolygon={this.changeHoverObject.bind(this)}
+                    />
+                </ReactMapGL>
 
-                    <nav className="mdl-navigation">
-                        {/* Options */}
+                <Card shadow={0} style={drawerStyle}>
+                    <CardTitle expand>
                         {additionalViews}
-                    </nav>
-                </div>
-                <main className="mdl-layout__content">
+                    </CardTitle>
+                </Card>
+                <Snackbar
+                    active={isSnackbarActive}
+                    onTimeout={this.handleTimeoutSnackbar}
+                    timeout={900000}
+                >
+                    <SyntaxHighlighter language='sql' style={darcula} customStyle={{textAlign: 'left', width:  '500px', overflowX: 'scroll'}} >
+                        {sqlFormatter.format(this.state.vizQuery)}
+                    </SyntaxHighlighter>
+                </Snackbar>
+                {/*{outerViews}*/}
+                <VariableView variables={this.state.variables} getContext={this.getContext.bind(this)} />
+                <div style={{position: 'absolute', top: '10px', right: '10px'}}>
+                    <FABButton mini><Icon name="mode_edit" /></FABButton>
+                    <FABButton onClick={this.clearPolyDraw.bind(this)} mini><Icon name="format_paint" /></FABButton>
 
-                    <div className="page-content">
-                        <MapGL
-                            {...viewport}
-                            mapStyle="mapbox://styles/anique/cj887jlt131vu2srt4ve78bdj"
-                            dragrotate={true}
-                            onViewportChange={this._onChangeViewport.bind(this)}
-                            mapboxApiAccessToken={this.MAPBOX_TOKEN} >
-                            <DeckGLOverlay className='deckoverlay' viewport={viewport}
-                                           strokeWidth={3}
-                                           data={this.state.explanationdata}
-                                           onHoverPolygon={this.changeHoverObject.bind(this)}
-                            />
-                        </MapGL>
-                        {/*{outerViews}*/}
-                    </div>
-                </main>
+                </div>
             </div>
 
         );
