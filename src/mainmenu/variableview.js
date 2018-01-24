@@ -164,6 +164,7 @@ class VariableView extends Component{
         });
         request('http://'+window.location.hostname+':8080/explain.json')
             .header("Content-Type", "application/json")
+            .timeout(1800000)
             .post(
                 JSON.stringify({
                     queries: variables,

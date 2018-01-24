@@ -247,7 +247,7 @@ app.post('/explain.json', (req, res)=> {
         'yellowtaxi.jar',
         'edu.asu.yellowtaxi.GeneralHierarchicalInterventionZoneClustering',
         '-f',
-        'public/data/yellowdata_columns_small.csv',
+        'public/data/yellowdata_columns.csv',
         '-b',
         'public/data/boundaries.csv',
         '-s',
@@ -352,6 +352,8 @@ app.get('filtercartogram.json', function(req,res){
 
 });
 
-app.listen(8080, function () {
+const server=app.listen(8080, function () {
     console.log('Example app listening on port 3000!')
 });
+
+server.timeout = 1800000;
