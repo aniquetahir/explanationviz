@@ -1,7 +1,7 @@
 import React,{Component} from 'react';
 import {Card, CardTitle, Dialog, DialogContent,
     DialogActions, Button, List, Chip, Textfield,
-    Grid, Cell, ListItem, ListItemContent, ListItemAction, Icon, Spinner}
+    Grid, Cell, ListItem, ListItemContent, ListItemAction, Icon, Spinner, Tooltip}
     from 'react-mdl';
 import SyntaxHighlighter from 'react-syntax-highlighter';
 import {darcula, tomorrow} from 'react-syntax-highlighter/styles/hljs';
@@ -26,7 +26,11 @@ class ExplanationListView extends Component{
                         showZones(exp.cluster.map(z=>parseInt(z)))
                     }}>
                         <ListItemContent>
-                            {i+1}. {exp.cluster.length} {exp.cluster.length > 1 ? 'Zones' : 'Zone'}
+                            <Tooltip label={<span>explanation index: {exp.explanation_index}<br />influence: {exp.influence}<br />intensity: {exp.intensity}</span>}>
+                                <span>
+                                {i+1}. {exp.cluster.length} {exp.cluster.length > 1 ? 'Zones' : 'Zone'}
+                                </span>
+                            </Tooltip>
                         </ListItemContent>
                         <ListItemAction>
                             <Icon name="visibility"/>
