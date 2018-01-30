@@ -309,7 +309,7 @@ class DataMap extends Map {
 
         const drawerStyle = {
             position: 'absolute',
-            width: "33%",
+            width: "500px",
             bottom: '10px',
             left: '10px',
             top: '10px',

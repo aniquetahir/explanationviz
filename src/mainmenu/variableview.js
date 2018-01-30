@@ -64,7 +64,8 @@ class VariableView extends Component{
             newVariable: 'SELECT count(*) FROM data',
             processing: false,
             explanations: [],
-            isLoading: false
+            isLoading: false,
+            isOpen: false
         };
 
         this.handleOpenDialog = this.handleOpenDialog.bind(this);
@@ -206,8 +207,21 @@ class VariableView extends Component{
         context.displayZones(zones);
     }
 
+    toggleOpen(){
+        this.setState({
+            isOpen: !this.state.isOpen
+        });
+    }
+
     render() {
         const {variables} = this.props;
+
+        const styleClosed = {
+            position: 'absolute',
+            right: '10px',
+            top: '60px',
+            background: 'white'
+        };
 
         const style = {
             position: 'absolute',
@@ -217,6 +231,14 @@ class VariableView extends Component{
             height: '90%',
             overflowY: 'scroll'
         };
+
+        if(!this.state.isOpen){
+            return (
+                <div style={styleClosed}>
+                    <Button onClick={()=>{this.toggleOpen()}}>Variables</Button>
+                </div>
+            );
+        }
 
         if(!variables){
             return null;
@@ -306,11 +328,18 @@ class VariableView extends Component{
                             </Grid>
 
                             <Grid>
-                                <Cell col={9}>
+                                <Cell col={5}>
                                     <Button style={{float: 'right'}} raised colored
-                                        onClick={()=>this.requestExplanation()}
+                                            onClick={()=>this.requestExplanation()}
                                     >
                                         Explain
+                                    </Button>
+                                </Cell>
+                                <Cell col={4}>
+                                    <Button style={{float: 'right'}} raised colored
+                                        onClick={()=>this.toggleOpen()}
+                                    >
+                                        Close
                                     </Button>
                                 </Cell>
                                 <Cell col={3}>

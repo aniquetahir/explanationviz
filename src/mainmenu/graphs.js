@@ -75,11 +75,11 @@ class GraphView extends Component{
     render(){
         const {data} = this.props;
         return (
-                <Card shadow={0} className="graph_view" style={{width: '100%', height: '600px', margin: 0}}>
+                <Card shadow={0} className="graph_view" style={{width: '100%', height: '300px', margin: 0}}>
                     <CardTitle expand style={{paddingTop: 0, paddingBottom:0}}>
                         <ContextMenuTrigger id={"menuShowViz"} >
                             <div ref={node=>this.graph_node=node}
-                                 style={{width: "100%", height: "100%", margin: 0, padding: '2px'}} />
+                                 style={{width: "100%", height: "300px", margin: 0, padding: '2px'}} />
                         </ContextMenuTrigger>
                     </CardTitle>
                     {/*<CardText style = {{textAlign: 'left'}}>*/}
@@ -248,8 +248,8 @@ class GraphListView extends Component{
         let subviews = data.map(
             (datum,i)=>{
                 return (
-                    <Grid style={i==0?{}:{marginTop: '100px'}} key={++listIndex}>
-                        <Cell col={12} style={{height: '500px', margin: 'auto'}}>
+                    <Grid /*style={i==0?{}:{marginTop: '100px'}}*/ key={++listIndex}>
+                        <Cell col={12} style={{ margin: 'auto'}}>
                             <GraphView setSelectedItems={_.debounce(this.setSelectedItems,300).bind(this)} data={datum} />
                         </Cell>
                     </Grid>
