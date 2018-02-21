@@ -210,6 +210,12 @@ class DataMap extends Map {
             );
     }
 
+    showCachedHeatmap(filename){
+        this.setState({
+            map_image: "heatmaps/"+filename
+        });
+    }
+
     getCartogramPlot(sql){
         console.log(sql);
         const {polyDraw} = this.state;

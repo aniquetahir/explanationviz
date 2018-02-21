@@ -67,6 +67,10 @@ class GraphView extends Component{
             myChart.on('contextmenu', (params)=>{
                 this.props.setSelectedItems([{index: params.dataIndex, data: data}]);
             });
+
+            myChart.on('click', (params)=>{
+                this.props.onClickForHeatmap([{index: params.dataIndex, data: data}]);
+            });
         }
     }
 
@@ -181,6 +185,18 @@ class GraphListView extends Component{
         }
     }
 
+    onClickForHeatmap(item){
+        // TODO
+        const {getContext} = this.props;
+        const data = item[0].data;
+        const clickedElement = item[0].index;
+        const context = getContext();
+
+        if(clickedElement!=null){
+            context.showCachedHeatmap(data.images[clickedElement]);
+        }
+    }
+
     getHeatmapPlot(){
         const data = this.state.selectedItems[0].data;
         let clickedElement = this.state.selectedItems[0].index;
@@ -232,8 +248,8 @@ class GraphListView extends Component{
                 where ${xlabel} = ${data.x[clickedElement]}
             `;
 
-            sql = sql.replace(new RegExp('tpep_pickup_datetime', 'g'), 'dayofmonth(tpep_pickup_datetime)');
-            sql = sql.replace(new RegExp('tpep_dropoff_datetime', 'g'), 'dayofmonth(tpep_dropoff_datetime)');
+            sql = sql.replace(new RegExp('tpep_pickup_datetime', 'g'), 'year(tpep_pickup_datetime)');
+            sql = sql.replace(new RegExp('tpep_dropoff_datetime', 'g'), 'year(tpep_dropoff_datetime)');
 
             context.addVariable(sql);
         }
@@ -250,7 +266,7 @@ class GraphListView extends Component{
                 return (
                     <Grid /*style={i==0?{}:{marginTop: '100px'}}*/ key={++listIndex}>
                         <Cell col={12} style={{ margin: 'auto'}}>
-                            <GraphView setSelectedItems={_.debounce(this.setSelectedItems,300).bind(this)} data={datum} />
+                            <GraphView onClickForHeatmap={this.onClickForHeatmap.bind(this)} setSelectedItems={_.debounce(this.setSelectedItems,300).bind(this)} data={datum} />
                         </Cell>
                     </Grid>
                 );
