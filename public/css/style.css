@@ -1,4 +1,4 @@
-html, body{
+html, body, #root,.App, .App>.container, .page-content{
     margin: 0;
     padding: 0;
     height: 100%;

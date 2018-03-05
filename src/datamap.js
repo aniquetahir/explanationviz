@@ -290,17 +290,6 @@ class DataMap extends Map {
         let outerViewKey = 0;
 
 
-        additionalViews.push(
-            <CartoSidepanel key={++additionalViewKey}
-                            data={this.props.statsData}
-                            showLegend={false}
-                            getScatterPlot={this.getScatterPlot.bind(this)}
-                            getHeatmapPlot={this.getHeatmapPlot.bind(this)}
-                            getCartogramPlot={this.getCartogramPlot.bind(this)}
-                            pltFunc={this.displayZones.bind(this)}
-                            getContext={this.getContext.bind(this)}
-            />
-        );
 
 
         if(loading){
@@ -428,43 +417,60 @@ class DataMap extends Map {
 
         return (
             <div className="page-content">
+                <Grid noSpacing={true} style={{height: '100%'}} >
+                    <Cell col={4} style={{height: '100%',overflowY: 'scroll'}}>
+                        <CartoSidepanel
+                                        data={this.props.statsData}
+                                        showLegend={false}
+                                        getScatterPlot={this.getScatterPlot.bind(this)}
+                                        getHeatmapPlot={this.getHeatmapPlot.bind(this)}
+                                        getCartogramPlot={this.getCartogramPlot.bind(this)}
+                                        pltFunc={this.displayZones.bind(this)}
+                                        getContext={this.getContext.bind(this)}
+                        />
+                    </Cell>
+                    <Cell col={8} align='stretch' >
+                        <ReactMapGL
+                            {...viewport}
+                            ref={obj=>this.mapComponent=obj}
+                            onClick={this.printClickCoordinates.bind(this)}
+                            mapStyle={mapStyle}
+                            dragrotate={true}
+                            onViewportChange={this._onChangeViewport.bind(this)}
+                            mapboxApiAccessToken={this.MAPBOX_TOKEN} >
+                            <DeckGLOverlay ref={deck=>this.deckGL=deck} className='deckoverlay' viewport={viewport}
+                                           strokeWidth={3}
+                                           data={this.state.explanationdata}
+                                           polyDraw={this.state.polyDraw}
+                                           onHoverPolygon={this.changeHoverObject.bind(this)}
+                            />
+                        </ReactMapGL>
+                    </Cell>
+                </Grid>
 
-                <ReactMapGL
-                    {...viewport}
-                    onClick={this.printClickCoordinates.bind(this)}
-                    mapStyle={mapStyle}
-                    dragrotate={true}
-                    onViewportChange={this._onChangeViewport.bind(this)}
-                    mapboxApiAccessToken={this.MAPBOX_TOKEN} >
-                    <DeckGLOverlay ref={deck=>this.deckGL=deck} className='deckoverlay' viewport={viewport}
-                                   strokeWidth={3}
-                                   data={this.state.explanationdata}
-                                   polyDraw={this.state.polyDraw}
-                                   onHoverPolygon={this.changeHoverObject.bind(this)}
-                    />
-                </ReactMapGL>
 
-                <Card shadow={0} style={drawerStyle}>
-                    <CardTitle expand>
-                        {additionalViews}
-                    </CardTitle>
-                </Card>
-                <Snackbar
-                    active={isSnackbarActive}
-                    onTimeout={this.handleTimeoutSnackbar}
-                    timeout={900000}
-                >
-                    <SyntaxHighlighter language='sql' style={darcula} customStyle={{textAlign: 'left', width:  '500px', overflowX: 'scroll'}} >
-                        {sqlFormatter.format(this.state.vizQuery)}
-                    </SyntaxHighlighter>
-                </Snackbar>
-                {/*{outerViews}*/}
+
+                {/*<Card shadow={0} style={drawerStyle}>*/}
+                    {/*<CardTitle expand>*/}
+                        {/*{additionalViews}*/}
+                    {/*</CardTitle>*/}
+                {/*</Card>*/}
+                {/*<Snackbar*/}
+                    {/*active={isSnackbarActive}*/}
+                    {/*onTimeout={this.handleTimeoutSnackbar}*/}
+                    {/*timeout={900000}*/}
+                {/*>*/}
+                    {/*<SyntaxHighlighter language='sql' style={darcula} customStyle={{textAlign: 'left', width:  '500px', overflowX: 'scroll'}} >*/}
+                        {/*{sqlFormatter.format(this.state.vizQuery)}*/}
+                    {/*</SyntaxHighlighter>*/}
+                {/*</Snackbar>*/}
+                {/*/!*{outerViews}*!/*/}
                 <VariableView variables={this.state.variables} getContext={this.getContext.bind(this)} />
-                <div style={{position: 'absolute', top: '10px', right: '10px'}}>
-                    <FABButton mini><Icon name="mode_edit" /></FABButton>
-                    <FABButton onClick={this.clearPolyDraw.bind(this)} mini><Icon name="format_paint" /></FABButton>
+                {/*<div style={{position: 'absolute', top: '10px', right: '10px'}}>*/}
+                    {/*<FABButton mini><Icon name="mode_edit" /></FABButton>*/}
+                    {/*<FABButton onClick={this.clearPolyDraw.bind(this)} mini><Icon name="format_paint" /></FABButton>*/}
 
-                </div>
+                {/*</div>*/}
             </div>
 
         );

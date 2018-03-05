@@ -1,4 +1,5 @@
 import React, {Component} from 'react';
+import ReactDOM from 'react-dom';
 import MapGL from 'react-map-gl';
 
 
@@ -24,7 +25,7 @@ class Map extends Component {
             viewport: {
                 ...Map.defaultViewport,
                 width: 500,
-                height: 500
+                height: 20
             }
         }
     }
@@ -35,9 +36,13 @@ class Map extends Component {
     }
 
     _resize() {
+        console.log("whatever");
+        console.log(this.mapComponent);
+        console.log(ReactDOM.findDOMNode(this.mapComponent));
+
         this._onChangeViewport({
-            width: window.innerWidth,
-            height: window.innerHeight
+            width: ReactDOM.findDOMNode(this.mapComponent).parentNode.getBoundingClientRect().width,
+            height: ReactDOM.findDOMNode(this.mapComponent).parentNode.getBoundingClientRect().height
         });
     }
 
@@ -53,6 +58,7 @@ class Map extends Component {
         return (
             <MapGL
                 {...viewport}
+                ref={obj=>this.mapComponent=obj}
                 mapStyle="mapbox://styles/anique/ciljdxi3k001daqlu1kdc45l2"
                 perspectiveEnabled={true}
                 onChangeViewport={this._onChangeViewport.bind(this)}
