@@ -36,6 +36,7 @@ class DataMap extends Map {
         this.logData = _.throttle(console.log, 1000, {trailing:false}).bind(this);
         this.setStateThrottled = _.throttle(this.setState, 300, {trailing: false}).bind(this);
         this.state.variables = [];
+        this.state.scatterdata=[];
 
         // Variables for holding the sql for the visualizations
         this.handleShowSnackbar = this.handleShowSnackbar.bind(this);
@@ -306,114 +307,114 @@ class DataMap extends Map {
         };
 
 
-        const mapStyle = fromJS({
-            "version": 8,
-            "name": "Light",
-            "sources": {
-                "mapbox": {
-                    "type": "vector",
-                    "url": "mapbox://mapbox.mapbox-streets-v6"
-                },
-                "overlay": {
-                    "type": "image",
-                    "url": this.state.map_image==null?"":this.state.map_image,
-                    "coordinates": [
-                                [-74.25, 40.9],
-                                [-73.7, 40.9],
-                                [-73.7, 40.5],
-                                [-74.25, 40.5]
-                    ]
-                }
-                // "overlay": {
-                //     "type": "image",
-                //     "url": this.state.map_image,
-                //     "coordinates": [
-                //         [-74.25, 40.9],
-                //         [-73.7, 40.9],
-                //         [-73.7, 40.5],
-                //         [-74.25, 40.5]
-                //     ]
-                // }
-            },
-            "sprite": "mapbox://sprites/mapbox/dark-v9",
-            "glyphs": "mapbox://fonts/mapbox/{fontstack}/{range}.pbf",
-            "layers": [
-                {
-                    "id": "background",
-                    "type": "background",
-                    "paint": {"background-color": "#111"}
-                },
-                {
-                    "id": "water",
-                    "source": "mapbox",
-                    "source-layer": "water",
-                    "type": "fill",
-                    "paint": {"fill-color": "#2c2c2c"}
-                },
-                {
-                    "id": "boundaries",
-                    "source": "mapbox",
-                    "source-layer": "admin",
-                    "type": "line",
-                    "paint": {"line-color": "#797979", "line-dasharray": [2, 2, 6, 2]},
-                    "filter": ["all", ["==", "maritime", 0]]
-                },
-                {
-                    "id": "overlay",
-                    "source": "overlay",
-                    "type": "raster",
-                    "paint": {"raster-opacity": 0.85}
-                },
-                {
-                    "id": "cities",
-                    "source": "mapbox",
-                    "source-layer": "place_label",
-                    "type": "symbol",
-                    "layout": {
-                        "text-field": "{name_en}",
-                        "text-font": ["DIN Offc Pro Bold", "Arial Unicode MS Bold"],
-                        "text-size": [
-                            "interpolate",
-                            ["linear"],
-                            ["zoom"],
-                            4, 9,
-                            6, 12
-                        ]
-                    },
-                    "paint": {
-                        "text-color": "#969696",
-                        "text-halo-width": 2,
-                        "text-halo-color": "rgba(0, 0, 0, 0.85)"
-                    }
-                },
-                {
-                    "id": "states",
-                    "source": "mapbox",
-                    "source-layer": "state_label",
-                    "type": "symbol",
-                    "layout": {
-                        "text-transform": "uppercase",
-                        "text-field": "{name_en}",
-                        "text-font": ["DIN Offc Pro Bold", "Arial Unicode MS Bold"],
-                        "text-letter-spacing": 0.15,
-                        "text-max-width": 7,
-                        "text-size": [
-                            "interpolate",
-                            ["linear"],
-                            ["zoom"],
-                            4, 10,
-                            6, 14
-                        ]
-                    },
-                    "filter": [">=", "area", 80000],
-                    "paint": {
-                        "text-color": "#969696",
-                        "text-halo-width": 2,
-                        "text-halo-color": "rgba(0, 0, 0, 0.85)"
-                    }
-                }
-            ]
-        });
+        // const mapStyle = fromJS({
+        //     "version": 8,
+        //     "name": "Light",
+        //     "sources": {
+        //         "mapbox": {
+        //             "type": "vector",
+        //             "url": "mapbox://mapbox.mapbox-streets-v6"
+        //         },
+        //         "overlay": {
+        //             "type": "image",
+        //             "url": this.state.map_image==null?"":this.state.map_image,
+        //             "coordinates": [
+        //                         [-74.25, 40.9],
+        //                         [-73.7, 40.9],
+        //                         [-73.7, 40.5],
+        //                         [-74.25, 40.5]
+        //             ]
+        //         }
+        //         // "overlay": {
+        //         //     "type": "image",
+        //         //     "url": this.state.map_image,
+        //         //     "coordinates": [
+        //         //         [-74.25, 40.9],
+        //         //         [-73.7, 40.9],
+        //         //         [-73.7, 40.5],
+        //         //         [-74.25, 40.5]
+        //         //     ]
+        //         // }
+        //     },
+        //     "sprite": "mapbox://sprites/mapbox/dark-v9",
+        //     "glyphs": "mapbox://fonts/mapbox/{fontstack}/{range}.pbf",
+        //     "layers": [
+        //         {
+        //             "id": "background",
+        //             "type": "background",
+        //             "paint": {"background-color": "#111"}
+        //         },
+        //         {
+        //             "id": "water",
+        //             "source": "mapbox",
+        //             "source-layer": "water",
+        //             "type": "fill",
+        //             "paint": {"fill-color": "#2c2c2c"}
+        //         },
+        //         {
+        //             "id": "boundaries",
+        //             "source": "mapbox",
+        //             "source-layer": "admin",
+        //             "type": "line",
+        //             "paint": {"line-color": "#797979", "line-dasharray": [2, 2, 6, 2]},
+        //             "filter": ["all", ["==", "maritime", 0]]
+        //         },
+        //         {
+        //             "id": "overlay",
+        //             "source": "overlay",
+        //             "type": "raster",
+        //             "paint": {"raster-opacity": 0.85}
+        //         },
+        //         {
+        //             "id": "cities",
+        //             "source": "mapbox",
+        //             "source-layer": "place_label",
+        //             "type": "symbol",
+        //             "layout": {
+        //                 "text-field": "{name_en}",
+        //                 "text-font": ["DIN Offc Pro Bold", "Arial Unicode MS Bold"],
+        //                 "text-size": [
+        //                     "interpolate",
+        //                     ["linear"],
+        //                     ["zoom"],
+        //                     4, 9,
+        //                     6, 12
+        //                 ]
+        //             },
+        //             "paint": {
+        //                 "text-color": "#969696",
+        //                 "text-halo-width": 2,
+        //                 "text-halo-color": "rgba(0, 0, 0, 0.85)"
+        //             }
+        //         },
+        //         {
+        //             "id": "states",
+        //             "source": "mapbox",
+        //             "source-layer": "state_label",
+        //             "type": "symbol",
+        //             "layout": {
+        //                 "text-transform": "uppercase",
+        //                 "text-field": "{name_en}",
+        //                 "text-font": ["DIN Offc Pro Bold", "Arial Unicode MS Bold"],
+        //                 "text-letter-spacing": 0.15,
+        //                 "text-max-width": 7,
+        //                 "text-size": [
+        //                     "interpolate",
+        //                     ["linear"],
+        //                     ["zoom"],
+        //                     4, 10,
+        //                     6, 14
+        //                 ]
+        //             },
+        //             "filter": [">=", "area", 80000],
+        //             "paint": {
+        //                 "text-color": "#969696",
+        //                 "text-halo-width": 2,
+        //                 "text-halo-color": "rgba(0, 0, 0, 0.85)"
+        //             }
+        //         }
+        //     ]
+        // });
 
         return (
             <div className="page-content">
@@ -434,13 +435,14 @@ class DataMap extends Map {
                             {...viewport}
                             ref={obj=>this.mapComponent=obj}
                             onClick={this.printClickCoordinates.bind(this)}
-                            mapStyle={mapStyle}
+                            mapStyle="mapbox://styles/anique/cj887jlt131vu2srt4ve78bdj"
                             dragrotate={true}
                             onViewportChange={this._onChangeViewport.bind(this)}
                             mapboxApiAccessToken={this.MAPBOX_TOKEN} >
                             <DeckGLOverlay ref={deck=>this.deckGL=deck} className='deckoverlay' viewport={viewport}
                                            strokeWidth={3}
                                            data={this.state.explanationdata}
+                                           scatterdata={this.state.scatterdata}
                                            polyDraw={this.state.polyDraw}
                                            onHoverPolygon={this.changeHoverObject.bind(this)}
                             />

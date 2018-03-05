@@ -140,29 +140,44 @@ class GraphListView extends Component{
         console.log(items);
     }
 
-    showSQL(){
-
+    getSQL(){
         const data = this.state.selectedItems[0].data;
         let clickedElement = this.state.selectedItems[0].index;
-        if(clickedElement!=null){
+        let sql = null;
+        if(clickedElement!=null) {
             let ylabel = data.ylabel;
             let xlabel = data.xlabel;
 
-            if(ylabel==="Trips"){
-                ylabel = 'count(*)'
+            if (ylabel === "Records") {
+                ylabel = 'count(*)';
+            } else if(ylabel.indexOf('Sum')==0) {
+                let elements = _.split(_.join(_.split(ylabel,'Sum('),'Sum(`'),')');
+                elements[elements.length-2] += '`';
+                ylabel=_.join(elements,')');
+            }else if(ylabel.indexOf('Avg')==0){
+                let elements = _.split(_.join(_.split(ylabel,'Avg('),'Avg(`'),')');
+                elements[elements.length-2] += '`';
+                ylabel=_.join(elements,')');
+            }else{
+                ylabel = '`' + ylabel + '`';
             }
 
-            let sql = `
+            sql = `
                 select ${ylabel} 
                 from data
-                where ${xlabel} = ${data.x[clickedElement]}
+                where \`${xlabel}\` = '${data.x[clickedElement]}'
             `;
-
-            this.handleOpenDialog();
-            this.setState({
-                dialogSQL: sql
-            })
         }
+
+        return sql;
+
+    }
+
+    showSQL(){
+        this.handleOpenDialog();
+        this.setState({
+            dialogSQL: this.getSQL()
+        });
     }
 
     getScatterPlot(){
@@ -216,27 +231,12 @@ class GraphListView extends Component{
     addVariable(){
         const {getContext}=this.props;
         const context = getContext();
-        const data = this.state.selectedItems[0].data;
-        let clickedElement = this.state.selectedItems[0].index;
-        if(clickedElement!=null){
-            let ylabel = data.ylabel;
-            let xlabel = data.xlabel;
 
-            if(ylabel==="Trips"){
-                ylabel = 'count(*)'
-            }
-
-            let sql = `
-                select ${ylabel} 
-                from data
-                where ${xlabel} = ${data.x[clickedElement]}
-            `;
-
-            sql = sql.replace(new RegExp('tpep_pickup_datetime', 'g'), 'dayofmonth(tpep_pickup_datetime)');
-            sql = sql.replace(new RegExp('tpep_dropoff_datetime', 'g'), 'dayofmonth(tpep_dropoff_datetime)');
-
+        let sql = this.getSQL();
+        if(sql!=null){
             context.addVariable(sql);
         }
+
 
     }
 

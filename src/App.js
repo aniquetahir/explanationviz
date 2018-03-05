@@ -14,7 +14,7 @@ const STATE_INTERVENTION = 4;
 
 class Evaluation extends Component {
     render(){
-        return <DataMap statsData={this.props.statsData} />;
+        return <DataMap metaData={this.props.metaData} statsData={this.props.statsData} />;
     }
 }
 
@@ -22,7 +22,8 @@ class Container extends Component {
     constructor(props){
         super(props);
         this.state = {
-            statsData: []
+            statsData: [],
+            metaData: []
         }
     }
 
@@ -36,7 +37,18 @@ class Container extends Component {
                         statsData: data
                     });
                 }
+            }
+        );
 
+        requestJson('data/metadata.json',
+            (err, data) => {
+                if(err){
+                    console.log(err);
+                }else{
+                    this.setState({
+                        metaData: data
+                    });
+                }
             }
         );
     }
@@ -44,7 +56,7 @@ class Container extends Component {
     render(){
         return (
             <div className="container">
-                <Evaluation statsData={this.state.statsData} />
+                <Evaluation metaData={this.state.metaData} statsData={this.state.statsData} />
                 {/*<GraphListView data={this.state.statsData} />*/}
             </div>
         );
