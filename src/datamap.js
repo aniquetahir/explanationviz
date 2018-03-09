@@ -6,13 +6,15 @@ import {json as requestJson, csv as requestCSV, request} from 'd3-request';
 import _ from 'lodash';
 import DeckGLOverlay from './deckgloverlay.js';
 import CartoSidepanel from './cartogram_sidepanel.js';
-import {Grid, Cell, FABButton, Icon, Card, CardTitle, Snackbar} from 'react-mdl';
+// import {Grid, Cell, FABButton, Icon, Card, CardTitle, Snackbar} from 'react-mdl';
+import {Grid, GridCell as Cell} from 'rmwc/Grid';
 import wkt from 'terraformer-wkt-parser';
 import {fromJS} from 'immutable';
 import SyntaxHighlighter from 'react-syntax-highlighter';
 import {darcula, tomorrow} from 'react-syntax-highlighter/styles/hljs';
 import sqlFormatter from "sql-formatter";
 import VariableView from './mainmenu/variableview';
+import FilterView from "./mainmenu/filter";
 
 class DataMap extends Map {
     constructor(props){
@@ -33,6 +35,8 @@ class DataMap extends Map {
         this.state.explanationattribute=null;
         this.state.map_image = null;
         this.state.explanationdata=[];
+        this.state.filteredData = [];
+        this.filterPredicate = '';
         this.logData = _.throttle(console.log, 1000, {trailing:false}).bind(this);
         this.setStateThrottled = _.throttle(this.setState, 300, {trailing: false}).bind(this);
         this.state.variables = [];
@@ -129,10 +133,6 @@ class DataMap extends Map {
         this.setStateThrottled({
             explanationdata: filteredBoundaries
         });
-    }
-
-    revertState(){
-
     }
 
     createWKT(poly){
@@ -274,13 +274,43 @@ class DataMap extends Map {
 
         console.log(sql);
 
-
     }
 
     getContext(){
         return this;
     }
 
+    filterData(predicates, cb){
+        if(predicates.trim()!='') {
+            this.setState({
+                loading: true,
+                filterPredicate: predicates
+            });
+            request('http://' + window.location.hostname + ':8080/filter.json')
+                .header("Content-Type", "application/json")
+                .post(
+                    JSON.stringify({predicate: predicates, filename: `public/data/${this.props.metaData.filename}`}),
+                    (err, data) => {
+                        if (err) {
+                            console.log(err);
+                        } else {
+                            //console.log(data);
+                            this.setState({
+                                filteredData: JSON.parse(data.responseText)
+                            });
+                        }
+                        this.setState({
+                            loading: false
+                        });
+                        if(!_.isNil(cb)){
+                            cb();
+                        }
+                    }
+                );
+        }else{
+            cb();
+        }
+    }
 
     render(){
         const {viewport, mode, loading, data, datasets, datasetid, isSnackbarActive} = this.state;
@@ -291,137 +321,21 @@ class DataMap extends Map {
         let outerViewKey = 0;
 
 
-
-
         if(loading){
             outerViews.push(<Loading key={++outerViewKey} />);
         }
 
-        const drawerStyle = {
-            position: 'absolute',
-            width: "500px",
-            bottom: '10px',
-            left: '10px',
-            top: '10px',
-            overflowY: 'scroll'
-        };
 
-
-        // const mapStyle = fromJS({
-        //     "version": 8,
-        //     "name": "Light",
-        //     "sources": {
-        //         "mapbox": {
-        //             "type": "vector",
-        //             "url": "mapbox://mapbox.mapbox-streets-v6"
-        //         },
-        //         "overlay": {
-        //             "type": "image",
-        //             "url": this.state.map_image==null?"":this.state.map_image,
-        //             "coordinates": [
-        //                         [-74.25, 40.9],
-        //                         [-73.7, 40.9],
-        //                         [-73.7, 40.5],
-        //                         [-74.25, 40.5]
-        //             ]
-        //         }
-        //         // "overlay": {
-        //         //     "type": "image",
-        //         //     "url": this.state.map_image,
-        //         //     "coordinates": [
-        //         //         [-74.25, 40.9],
-        //         //         [-73.7, 40.9],
-        //         //         [-73.7, 40.5],
-        //         //         [-74.25, 40.5]
-        //         //     ]
-        //         // }
-        //     },
-        //     "sprite": "mapbox://sprites/mapbox/dark-v9",
-        //     "glyphs": "mapbox://fonts/mapbox/{fontstack}/{range}.pbf",
-        //     "layers": [
-        //         {
-        //             "id": "background",
-        //             "type": "background",
-        //             "paint": {"background-color": "#111"}
-        //         },
-        //         {
-        //             "id": "water",
-        //             "source": "mapbox",
-        //             "source-layer": "water",
-        //             "type": "fill",
-        //             "paint": {"fill-color": "#2c2c2c"}
-        //         },
-        //         {
-        //             "id": "boundaries",
-        //             "source": "mapbox",
-        //             "source-layer": "admin",
-        //             "type": "line",
-        //             "paint": {"line-color": "#797979", "line-dasharray": [2, 2, 6, 2]},
-        //             "filter": ["all", ["==", "maritime", 0]]
-        //         },
-        //         {
-        //             "id": "overlay",
-        //             "source": "overlay",
-        //             "type": "raster",
-        //             "paint": {"raster-opacity": 0.85}
-        //         },
-        //         {
-        //             "id": "cities",
-        //             "source": "mapbox",
-        //             "source-layer": "place_label",
-        //             "type": "symbol",
-        //             "layout": {
-        //                 "text-field": "{name_en}",
-        //                 "text-font": ["DIN Offc Pro Bold", "Arial Unicode MS Bold"],
-        //                 "text-size": [
-        //                     "interpolate",
-        //                     ["linear"],
-        //                     ["zoom"],
-        //                     4, 9,
-        //                     6, 12
-        //                 ]
-        //             },
-        //             "paint": {
-        //                 "text-color": "#969696",
-        //                 "text-halo-width": 2,
-        //                 "text-halo-color": "rgba(0, 0, 0, 0.85)"
-        //             }
-        //         },
-        //         {
-        //             "id": "states",
-        //             "source": "mapbox",
-        //             "source-layer": "state_label",
-        //             "type": "symbol",
-        //             "layout": {
-        //                 "text-transform": "uppercase",
-        //                 "text-field": "{name_en}",
-        //                 "text-font": ["DIN Offc Pro Bold", "Arial Unicode MS Bold"],
-        //                 "text-letter-spacing": 0.15,
-        //                 "text-max-width": 7,
-        //                 "text-size": [
-        //                     "interpolate",
-        //                     ["linear"],
-        //                     ["zoom"],
-        //                     4, 10,
-        //                     6, 14
-        //                 ]
-        //             },
-        //             "filter": [">=", "area", 80000],
-        //             "paint": {
-        //                 "text-color": "#969696",
-        //                 "text-halo-width": 2,
-        //                 "text-halo-color": "rgba(0, 0, 0, 0.85)"
-        //             }
-        //         }
-        //     ]
-        // });
 
         return (
             <div className="page-content">
-                <Grid noSpacing={true} style={{height: '100%'}} >
-                    <Cell col={4} style={{height: '100%',overflowY: 'scroll'}}>
+                <Grid style={{height: '100%'}} >
+                    <Cell span="4" style={{overflowY: 'scroll', textAlign: 'left'}}>
+                        <FilterView data={this.props.statsData} getContext={this.getContext.bind(this)} />
+                    </Cell>
+                    <Cell span="4" style={{overflowY: 'scroll', textAlign: 'left'}}>
                         <CartoSidepanel
-                                        data={this.props.statsData}
+                                        data={this.state.filteredData.length==0?this.props.statsData:this.state.filteredData}
                                         showLegend={false}
                                         getScatterPlot={this.getScatterPlot.bind(this)}
                                         getHeatmapPlot={this.getHeatmapPlot.bind(this)}
@@ -430,7 +344,7 @@ class DataMap extends Map {
                                         getContext={this.getContext.bind(this)}
                         />
                     </Cell>
-                    <Cell col={8} align='stretch' >
+                    <Cell span="4" style={{overflow: 'hidden'}} >
                         <ReactMapGL
                             {...viewport}
                             ref={obj=>this.mapComponent=obj}

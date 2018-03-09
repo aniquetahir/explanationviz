@@ -1,10 +1,13 @@
 import React,{Component} from 'react';
-import {Grid, Cell, Card, CardTitle, CardText, CardActions, Button, Dialog, DialogTitle, DialogActions, DialogContent} from 'react-mdl';
+
+
+
+
 import * as echarts from 'echarts';
-import SyntaxHighlighter from 'react-syntax-highlighter';
-import {darcula, tomorrow} from 'react-syntax-highlighter/styles/hljs';
+
+
 import _ from 'lodash';
-import sqlFormatter from "sql-formatter";
+
 import {ContextMenu, ContextMenuTrigger, MenuItem} from 'react-contextmenu';
 import * as dialogPolyfill from 'dialog-polyfill';
 
@@ -75,22 +78,10 @@ class GraphView extends Component{
     render(){
         const {data} = this.props;
         return (
-                <Card shadow={0} className="graph_view" style={{width: '100%', height: '300px', margin: 0}}>
-                    <CardTitle expand style={{paddingTop: 0, paddingBottom:0}}>
-                        <ContextMenuTrigger id={"menuShowViz"} >
-                            <div ref={node=>this.graph_node=node}
-                                 style={{width: "100%", height: "300px", margin: 0, padding: '2px'}} />
-                        </ContextMenuTrigger>
-                    </CardTitle>
-                    {/*<CardText style = {{textAlign: 'left'}}>*/}
-                        {/*<SyntaxHighlighter language='sql' style={darcula} customStyle={{height: '100px'}}>*/}
-                            {/*{sqlFormatter.format(data.sql)}*/}
-                        {/*</SyntaxHighlighter>*/}
-                    {/*</CardText>*/}
-                    {/*<CardActions border>*/}
-                        {/*<Button raised>Explain</Button>*/}
-                    {/*</CardActions>*/}
-                </Card>
+            <ContextMenuTrigger id={"menuShowViz"} >
+                <div ref={node=>this.graph_node=node}
+                     style={{width: "100%", height: "300px", margin: 0, padding: '2px'}} />
+            </ContextMenuTrigger>
         );
     }
 }
@@ -98,13 +89,6 @@ class GraphView extends Component{
 class GraphListView extends Component{
     constructor(props){
         super(props);
-        this.state = {
-            selectedItems: [],
-            dialogSQL: "No SQL"
-        };
-
-        this.handleOpenDialog = this.handleOpenDialog.bind(this);
-        this.handleCloseDialog = this.handleCloseDialog.bind(this);
     }
 
     componentDidMount(){
@@ -120,139 +104,43 @@ class GraphListView extends Component{
         }
     }
 
-    handleOpenDialog() {
-        this.setState({
-            openDialog: true
-        });
-    }
 
-    handleCloseDialog() {
-        this.setState({
-            openDialog: false
-        });
-    }
 
 
     setSelectedItems(items){
-        this.setState({
-           selectedItems: items
-        });
-        console.log(items);
+        this.props.setSelectedItems(items);
     }
 
-    getSQL(){
-        const data = this.state.selectedItems[0].data;
-        let clickedElement = this.state.selectedItems[0].index;
-        let sql = null;
-        if(clickedElement!=null) {
-            let ylabel = data.ylabel;
-            let xlabel = data.xlabel;
 
-            if (ylabel === "Records") {
-                ylabel = 'count(*)';
-            } else if(ylabel.indexOf('Sum')==0) {
-                let elements = _.split(_.join(_.split(ylabel,'Sum('),'Sum(`'),')');
-                elements[elements.length-2] += '`';
-                ylabel=_.join(elements,')');
-            }else if(ylabel.indexOf('Avg')==0){
-                let elements = _.split(_.join(_.split(ylabel,'Avg('),'Avg(`'),')');
-                elements[elements.length-2] += '`';
-                ylabel=_.join(elements,')');
-            }else{
-                ylabel = '`' + ylabel + '`';
-            }
-
-            sql = `
-                select ${ylabel} 
-                from data
-                where \`${xlabel}\` = '${data.x[clickedElement]}'
-            `;
-        }
-
-        return sql;
-
-    }
 
     showSQL(){
-        this.handleOpenDialog();
-        this.setState({
-            dialogSQL: this.getSQL()
-        });
+        this.props.showSQL();
     }
 
     getScatterPlot(){
-        const data = this.state.selectedItems[0].data;
-        let clickedElement = this.state.selectedItems[0].index;
-        if(clickedElement!=null){
-            let xlabel = data.xlabel;
-
-            let sql = `
-                select pickup_longitude, pickup_latitude 
-                from data
-                where ${xlabel} = ${data.x[clickedElement]}
-            `;
-
-            this.props.getScatterPlot(sql);
-        }
+        this.props.getScatterPlot();
     }
 
     getHeatmapPlot(){
-        const data = this.state.selectedItems[0].data;
-        let clickedElement = this.state.selectedItems[0].index;
-        if(clickedElement!=null){
-            let xlabel = data.xlabel;
-
-            let sql = `
-                select pickup_longitude, pickup_latitude 
-                from data
-                where ${xlabel} = ${data.x[clickedElement]}
-            `;
-
-            this.props.getHeatmapPlot(sql);
-        }
+        this.props.getHeatmapPlot();
     }
 
     getCartogramPlot(){
-        const data = this.state.selectedItems[0].data;
-        let clickedElement = this.state.selectedItems[0].index;
-        if(clickedElement!=null){
-            let xlabel = data.xlabel;
-
-            let sql = `
-                select pickup_longitude, pickup_latitude 
-                from data
-                where ${xlabel} = ${data.x[clickedElement]}
-            `;
-
-            this.props.getCartogramPlot(sql);
-        }
+        this.props.getCartogramPlot();
     }
 
     addVariable(){
-        const {getContext}=this.props;
-        const context = getContext();
-
-        let sql = this.getSQL();
-        if(sql!=null){
-            context.addVariable(sql);
-        }
-
-
+        this.props.addVariable();
     }
 
     render(){
         const {data} = this.props;
 
-        let listIndex = 0;
-
         let subviews = data.map(
             (datum,i)=>{
                 return (
-                    <Grid /*style={i==0?{}:{marginTop: '100px'}}*/ key={++listIndex}>
-                        <Cell col={12} style={{ margin: 'auto'}}>
-                            <GraphView setSelectedItems={_.debounce(this.setSelectedItems,300).bind(this)} data={datum} />
-                        </Cell>
-                    </Grid>
+                    <GraphView key={i}
+                               setSelectedItems={_.debounce(this.setSelectedItems,300).bind(this)} data={datum} />
                 );
             }
         );
@@ -261,36 +149,6 @@ class GraphListView extends Component{
         return (
             <div>
                 {subviews}
-                <ContextMenu id={"menuShowViz"}>
-                    <MenuItem onClick={this.getCartogramPlot.bind(this)}>
-                        Choropleth Map
-                    </MenuItem>
-                    <MenuItem  onClick={this.getHeatmapPlot.bind(this)}>
-                        Heatmap
-                    </MenuItem>
-                    <MenuItem  onClick={this.getScatterPlot.bind(this)}>
-                        Scatterplot
-                    </MenuItem>
-                    <MenuItem onClick={()=>this.showSQL()}
-                    >
-                        Show SQL
-                    </MenuItem>
-                    <MenuItem onClick={()=>this.addVariable()}>
-                        Add as Variable
-                    </MenuItem>
-                </ContextMenu>
-
-                <Dialog open={this.state.openDialog} ref={dialog=>this.dialog=dialog==null?null:dialog.dialogRef}>
-                    {/*<DialogTitle>SQL</DialogTitle>*/}
-                    <DialogContent>
-                        <SyntaxHighlighter language='sql' style={tomorrow} customStyle={{textAlign: "left"}}>
-                            {sqlFormatter.format(this.state.dialogSQL)}
-                        </SyntaxHighlighter>
-                    </DialogContent>
-                    <DialogActions>
-                        <Button type='button' onClick={this.handleCloseDialog}>Close</Button>
-                    </DialogActions>
-                </Dialog>
             </div>
         );
     }

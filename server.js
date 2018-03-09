@@ -241,6 +241,35 @@ app.post('/heatmap.json', function(req, res){
     // }
 });
 
+app.post('/filter.json', (req, res)=> {
+    let args = [
+        '-cp',
+        'yellowtaxi.jar',
+        'edu.asu.evaluation.HistogramFactory',
+        req.body.filename,
+        req.body.predicate
+    ];
+
+    let data = '';
+    console.log('Executing: java "'+args.join('" "')+'"');
+
+    const expl_process = spawn('java',
+        args);
+
+    expl_process.stdout.on('data', (d)=>{
+        data+=d;
+    });
+
+    expl_process.stderr.on('data',(d)=>{console.log(`${d}`);});
+
+    expl_process.on('close', (code)=>{
+        res.send(data);
+        console.log(`Child process ended with code ${code}`);
+    });
+
+
+});
+
 app.post('/explain.json', (req, res)=> {
     let args = [
         '-cp',
