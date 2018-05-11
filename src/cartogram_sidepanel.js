@@ -80,16 +80,19 @@ class AttributeGraphList extends Component{
     }
 
     getScatterPlot(){
+        let context = this.props.getContext();
+        let filterPredicate = context.state.filterPredicate;
+
+
         const data = this.state.selectedItems[0].data;
         let clickedElement = this.state.selectedItems[0].index;
         if(clickedElement!=null){
             let xlabel = data.xlabel;
 
-            let sql = `
-                select pickup_longitude, pickup_latitude 
-                from data
-                where ${xlabel} = ${data.x[clickedElement]}
-            `;
+            let sql = `\`${xlabel}\` = '${data.x[clickedElement]}'`;
+            if(!_.isNil(filterPredicate) && filterPredicate.trim()!=''){
+                sql=sql+' and '+filterPredicate;
+            }
 
             this.props.getScatterPlot(sql);
         }

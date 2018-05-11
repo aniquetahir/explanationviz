@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import DeckGL, {OrthographicViewport, PolygonLayer} from 'deck.gl';
+import DeckGL, {OrthographicViewport, PolygonLayer, ScatterplotLayer} from 'deck.gl';
 
 export default class DeckGLOverlay extends Component{
     constructor(){
@@ -33,7 +33,7 @@ export default class DeckGLOverlay extends Component{
     }
 
     render() {
-        const {viewport, data, onHoverPolygon, polyDraw} = this.props;
+        const {viewport, data, onHoverPolygon, polyDraw, scatterdata} = this.props;
         if (!data) {
             return null;
         }
@@ -42,38 +42,46 @@ export default class DeckGLOverlay extends Component{
         let closedPolygon = polyDraw.slice();
         closedPolygon.push(polyDraw[0]);
         const layers = [
-            new PolygonLayer({
-                id: 'explanationdata',
-                data: data,
-                filled: true,
-                stroked: true,
-                extruded: false,
-                opacity: 0.5,
-                wireframe: false,
-                pickable: false,
-                // onHover: d=>onHoverPolygon(d),
-                getPolygon: d => d.polygon,
-                getElevation: d => 0,
-                getFillColor: d => [247,148,0],
-                getLineColor: d => [255, 255, 255],
-                getLineWidth: d => 50
-            })
+            new ScatterplotLayer({
+                id: 'scatterplotlayer',
+                data: scatterdata,
+                getPosition: d=>d,
+                radiusScale: 100,
+                getRadius: ()=>1,
+                getColor: ()=>[0,200,100]
+            }),
             // new PolygonLayer({
-            //     id: 'polygondata',
-            //     data: [{"a":"b"}],
-            //     filled: false,
+            //     id: 'explanationdata',
+            //     data: data,
+            //     filled: true,
             //     stroked: true,
             //     extruded: false,
-            //     opacity: 1,
+            //     opacity: 0.5,
             //     wireframe: false,
-            //     pickable: true,
-            //     onHover: d=>onHoverPolygon(d),
-            //     getPolygon: d => closedPolygon,
+            //     pickable: false,
+            //     // onHover: d=>onHoverPolygon(d),
+            //     getPolygon: d => d.polygon,
             //     getElevation: d => 0,
-            //     getFillColor: d => [255,125,125],
-            //     getLineColor: d => [256, 0, 0],
-            //     getLineWidth: d => 100
+            //     getFillColor: d => [247,148,0],
+            //     getLineColor: d => [255, 255, 255],
+            //     getLineWidth: d => 50
             // })
+            new PolygonLayer({
+                id: 'polygondata',
+                data: [{"a":"b"}],
+                filled: false,
+                stroked: true,
+                extruded: false,
+                opacity: 1,
+                wireframe: false,
+                pickable: true,
+                onHover: d=>onHoverPolygon(d),
+                getPolygon: d => data,
+                getElevation: d => 0,
+                getFillColor: d => [255,125,125],
+                getLineColor: d => [256, 0, 0],
+                getLineWidth: d => 100
+            })
         ];
 
         return (

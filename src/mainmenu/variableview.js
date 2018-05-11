@@ -10,6 +10,7 @@ import sqlFormatter from "sql-formatter";
 import * as dialogPolyfill from 'dialog-polyfill';
 import {UnControlled as CodeMirror} from 'react-codemirror2';
 import {request} from 'd3-request';
+import { Elevation } from 'rmwc/Elevation';
 
 import {
     Dialog,
@@ -22,6 +23,7 @@ import {
     DialogFooterButton,
     DialogBackdrop
 } from 'rmwc/Dialog';
+import {List, ListItem, ListItemText} from 'rmwc/List';
 import {Chip, ChipIcon, ChipSet, ChipText} from 'rmwc/Chip';
 import {GridInner as Grid, GridCell as Cell} from 'rmwc/Grid';
 import {TextField} from 'rmwc/TextField';
@@ -36,45 +38,37 @@ require('codemirror/mode/sql/sql');
 
 class ExplanationListView extends Component{
     render() {
-        return null;
-//         const {explanations, showZones} = this.props;
-//
-//         let listItems = explanations.map(
-//             (exp, i) => {
-//                 return (
-//                     <ListItem key={i} style={{cursor: 'pointer'}} onClick={() => {
-//                         showZones(exp.cluster.map(z=>parseInt(z)))
-//                     }}>
-//                         <ListItemContent>
-//                             <Tooltip label={<span>explanation index: {exp.explanation_index}<br />influence: {exp.influence}<br />intensity: {exp.intensity}</span>}>
-//                                 <span>
-//                                 {i+1}. {exp.cluster.length} {exp.cluster.length > 1 ? 'Zones' : 'Zone'}
-//                                 </span>
-//                             </Tooltip>
-//                         </ListItemContent>
-//                         <ListItemAction>
-//                             <Icon name="visibility"/>
-//                         </ListItemAction>
-//                     </ListItem>
-//                 );
-//             }
-//         );
-//
-//         return (
-//             <div style={{width: '100%'}}>
-//                 <Grid>
-//                     <Cell col={12}>
-//                         <h3>{explanations.length>0?'Explanations':''}</h3>
-//                     </Cell>
-//                     <Cell col={12}>
-//                         <List>
-//                             {listItems}
-//                         </List>
-//                     </Cell>
-//                 </Grid>
-//
-//             </div>
-//         );
+        const {explanations, showZones} = this.props;
+
+        let listItems = explanations.map(
+            (exp, i) => {
+                return (
+                    <ListItem  key={i} style={{cursor: 'pointer'}} onClick={() => {
+                        showZones(exp.shape);
+                    }}>
+                        <ListItemText>
+                            {i+1}. {exp.cluster.length} {exp.cluster.length > 1 ? 'Zones' : 'Zone'}/ inf:{exp.influence}/ int:{exp.intensity}
+                        </ListItemText>
+                    </ListItem>
+                );
+            }
+        );
+
+        return (
+            <div style={{width: '100%'}}>
+                <Grid>
+                    <Cell span="12">
+                        <h3>{explanations.length>0?'Explanations':''}</h3>
+                    </Cell>
+                    <Cell span="12">
+                        <List>
+                            {listItems}
+                        </List>
+                    </Cell>
+                </Grid>
+
+            </div>
+        );
     }
 
 }
@@ -249,21 +243,20 @@ class VariableView extends Component{
 
         const style = {
             position: 'absolute',
-            right: '10px',
+            left: '10px',
             top: '10px',
-            width: '512px',
+            width: '470px',
             height: '90%',
             overflowY: 'scroll',
             background: 'white',
             textAlign: 'left',
-            overflow: 'hidden',
             padding: '10px'
         };
 
         if(!this.state.isOpen){
             return (
                 <div style={styleClosed}>
-                    <Button raised onClick={()=>{this.toggleOpen()}}>Variables</Button>
+                    <Button raised onClick={()=>{this.toggleOpen()}}>Variables({variables.length})</Button>
                 </div>
             );
         }
@@ -283,7 +276,7 @@ class VariableView extends Component{
         });
 
         return (
-            <div style={style}>
+            <Elevation z={3} style={style}>
                 <div style={{width: '100%', margin: 'auto'}}>
                     <Grid>
                         <Cell span="12">
@@ -374,7 +367,7 @@ class VariableView extends Component{
 
                         </Cell>
                     </Grid>
-                    {/*<ExplanationListView explanations={this.state.explanations} showZones={this.showZones.bind(this)} />*/}
+                    <ExplanationListView explanations={this.state.explanations} showZones={this.showZones.bind(this)} />
                 </div>
                 <Dialog
                     open={this.state.openDialog}
@@ -438,7 +431,7 @@ class VariableView extends Component{
 
 
 
-            </div>
+            </Elevation>
         );
     }
 

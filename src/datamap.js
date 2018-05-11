@@ -127,11 +127,9 @@ class DataMap extends Map {
 
 
     displayZones(zones){
-        let filteredBoundaries = this.state.boundaries.filter(b=>zones.indexOf(b.id)!==-1);
-        this.logData(filteredBoundaries);
-        //
+        let coordinates = wkt.parse(zones).coordinates;
         this.setStateThrottled({
-            explanationdata: filteredBoundaries
+            explanationdata: coordinates
         });
     }
 
@@ -143,35 +141,39 @@ class DataMap extends Map {
     }
 
 
-    getScatterPlot(sql){
-        console.log(sql);
-        const {polyDraw} = this.state;
-        let query_sql = sql;
-        if(polyDraw.length>=3){
-            query_sql = sql + ` and ST_CONTAINS(ST_GeomFromWKT('${this.createWKT(polyDraw)}'), ST_Point(
-                CAST(pickup_longitude AS DECIMAL(24,14)),CAST(pickup_latitude AS DECIMAL(24,14)) 
-            ))`;
-        }
+    getScatterPlot(predicate){
+        console.log(predicate);
+        let xField = this.props.metaData.longitude;
+        let yField = this.props.metaData.latitude;
 
-        request('http://'+window.location.hostname+':8080/scatter.json')
+        this.setState({
+            loading: true
+        });
+        request('http://'+window.location.hostname+':8080/points.json')
             .header("Content-Type", "application/json")
             .post(
-                JSON.stringify({sql: query_sql}),
+                JSON.stringify(
+                    {
+                        predicate: predicate,
+                        filename: `public/data/${this.props.metaData.filename}`,
+                        x: xField,
+                        y: yField
+                    }
+                ),
                 (err, data)=>{
-                    if(err){
-                        console.log(err);
-                    }else{
-                        console.log(data);
-                        let where = sql.toLowerCase().split("where")[1];
 
-                        if(polyDraw.length >=3){
-                            where += " AND ST_CONTAINS('"+this.createWKT(polyDraw)+"', taxi.pickup)"
-                        }
+                    if(err){
+                        alert(err);
                         this.setState({
-                            map_image: "data:image/png;base64," + JSON.parse(data.responseText).image,
-                            vizQuery: `SELECT ScatterPlot(taxi.pickup) FROM NYCtaxi taxi WHERE ${where}`
+                            loading: false
                         });
-                        this.handleShowSnackbar();
+                    }else{
+                        this.setState(
+                            {
+                                loading:false,
+                                scatterdata: JSON.parse(data.responseText)
+                            }
+                        );
                     }
                 }
             );
@@ -248,14 +250,14 @@ class DataMap extends Map {
 
     printClickCoordinates(event){
         //console.log(event);
-        let coords = this.state.polyDraw;
-        coords.push(event.lngLat);
-
-        this.setState({
-            polyDraw:coords
-        });
-
-        console.log(coords);
+        // let coords = this.state.polyDraw;
+        // coords.push(event.lngLat);
+        //
+        // this.setState({
+        //     polyDraw:coords
+        // });
+        //
+        // console.log(coords);
     }
 
     clearPolyDraw(){
@@ -348,7 +350,7 @@ class DataMap extends Map {
                         <ReactMapGL
                             {...viewport}
                             ref={obj=>this.mapComponent=obj}
-                            onClick={this.printClickCoordinates.bind(this)}
+                            // onClick={this.printClickCoordinates.bind(this)}
                             mapStyle="mapbox://styles/anique/cj887jlt131vu2srt4ve78bdj"
                             dragrotate={true}
                             onViewportChange={this._onChangeViewport.bind(this)}

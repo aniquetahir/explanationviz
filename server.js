@@ -270,17 +270,54 @@ app.post('/filter.json', (req, res)=> {
 
 });
 
+app.post('/points.json', (req, res)=> {
+    let args = [
+        '-cp',
+        'yellowtaxi.jar',
+        'edu.asu.viz.PointsFactory',
+        req.body.filename,
+        req.body.predicate,
+        req.body.x,
+        req.body.y
+
+    ];
+
+    let data = '';
+    console.log('Executing: java "'+args.join('" "')+'"');
+
+    const expl_process = spawn('java',
+        args);
+
+    expl_process.stdout.on('data', (d)=>{
+        data+=d;
+    });
+
+    expl_process.stderr.on('data',(d)=>{console.log(`${d}`);});
+
+    expl_process.on('close', (code)=>{
+        res.send(data);
+        console.log(`Child process ended with code ${code}`);
+    });
+
+
+});
+
 app.post('/explain.json', (req, res)=> {
+    // -f data/Opiod.csv -lat lat_rand -lng long_rand -s 0 -b none -q "select count(*) from data" -o %1$s -n 5
     let args = [
         '-cp',
         'yellowtaxi.jar',
         'edu.asu.yellowtaxi.GeneralHierarchicalInterventionZoneClustering',
         '-f',
-        'public/data/yellowdata_columns.csv',
-        '-b',
-        'public/data/boundaries.csv',
+        'public/data/Opiod.csv',
+        '-lat',
+        'lat_rand',
+        '-lng',
+        'long_rand',
         '-s',
         '0',
+        '-b',
+        'none',
         '-i',
         '0','1','2','3','6','7','8','9','10','11',
         '-q',

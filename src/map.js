@@ -6,8 +6,8 @@ import MapGL from 'react-map-gl';
 class Map extends Component {
     static get defaultViewport() {
         return {
-            latitude: 40.7,
-            longitude: -73.98,
+            latitude: 33.396,
+            longitude: -111.90,
             zoom: 10,
             maxZoom: 16,
             pitch: 0,
